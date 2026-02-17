@@ -1,0 +1,159 @@
+---
+alwaysApply: true
+---
+---
+alwaysApply: true
+---
+
+# Cursor Rules: Backend Integration & Data Fetching
+
+## 1. Overview & Stack
+- **State Management:** `@tanstack/react-query`
+- **Key Management:** `@lukemorales/query-key-factory`
+- **Fetching:** `apiClientFetch` (openapi-fetch wrapper)
+- **Schema:** `components["schemas"]` from `@/api/schema`
+- **Naming Convention:** Internal hooks and query objects use the `INTERNAL__` prefix.
+
+---
+
+## 2. Directory Structure
+For every feature (e.g., `dashboard`, `participant`), you must adhere to this folder structure:
+
+src/[feature-folder]/
+├── api_hooks/                   # Folder containing individual hook files
+│   ├── INTERNAL__useGet[Entity].ts
+│   └── INTERNAL__usePost[Action].ts
+├── _[feature-name].queries.ts   # Definitions for Query Keys & Fetch Functions (GET)
+└── _[feature-name].api.ts       # Aggregator file exporting all hooks for this feature
+
+
+## 3. Rules for GET Requests (Queries)
+
+GET logic is split into two parts: Key Definition and Hook Consumption.
+
+### Part A: Define Keys & Fetch Logic
+
+**File:** `src/[feature]/_[feature].queries.ts`
+
+**Rule:** Use `createQueryKeys`. You must strictly handle errors by checking `response.error`.
+
+```typescript
+import { createQueryKeys } from "@lukemorales/query-key-factory";
+import { apiClientFetch } from "@/api/apiClient";
+
+export const INTERNAL__featureQueries = createQueryKeys("featureName", {
+    getDetail: ({ hash }: { hash: string }) => ({
+        queryKey: ["getDetail", hash],
+        queryFn: async () => {
+            const response = await apiClientFetch.GET("/api/endpoint/{hash}/", {
+                params: {
+                    path: { hash },
+                },
+            });
+
+            const { error } = response;
+            if (error) {
+                // Must throw explicitly for React Query to catch it
+                throw new Error("Failed to fetch data", { cause: error });
+            }
+
+            return response.data;
+        },
+    }),
+});
+```
+
+### Part B: The React Hook
+
+**File:** `src/[feature]/api_hooks/INTERNAL__useGet[Entity].ts`
+
+**Rule:** Import queries from the global registry (`@/api/queries`) and spread the specific query object.
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { queries } from "@/api/queries";
+
+export const INTERNAL__useGetFeatureDetail = ({ hash }: { hash: string }) => {
+    return useQuery({
+        ...queries.featureName.getDetail({ hash }),
+    });
+};
+```
+
+## 4. Rules for POST/PUT Requests (Mutations)
+
+Mutations are self-contained within the hook file.
+
+**File:** `src/[feature]/api_hooks/INTERNAL__usePost[Action].ts`
+
+**Rule:** Define `mutationFn` inline. Use `apiClientFetch` types for payload.
+
+```typescript
+import { useMutation } from "@tanstack/react-query";
+import { apiClientFetch } from "@/api/apiClient";
+import type { components } from "@/api/schema";
+
+export const INTERNAL__usePostAction = ({
+    hash,
+    onSuccess,
+}: {
+    hash: string;
+    onSuccess: () => void;
+}) => {
+    return useMutation({
+        mutationFn: async ({
+            payload,
+        }: {
+            // Use specific schema type
+            payload: components["schemas"]["YourSchemaType"];
+        }) => {
+            const response = await apiClientFetch.POST("/api/endpoint/{hash}/action/", {
+                body: payload,
+                params: {
+                    path: { hash },
+                },
+            });
+
+            // Return data or handle error
+            return response.data;
+        },
+        onSuccess: onSuccess,
+    });
+};
+```
+
+## 5. Wiring & Registration
+
+Every time a new query or hook is created, you must update the registries.
+
+### Step 1: Register Query Keys
+
+**File:** `src/api/queries.ts`
+
+**Rule:** Import the new query object and add it to `mergeQueryKeys`.
+
+```typescript
+import { mergeQueryKeys } from "@lukemorales/query-key-factory";
+import { INTERNAL__featureQueries } from "@/feature/_[feature].queries";
+
+export const queries = mergeQueryKeys(
+    // ... existing queries
+    INTERNAL__featureQueries,
+);
+```
+
+### Step 2: Aggregate Feature Hooks
+
+**File:** `src/[feature]/_[feature].api.ts`
+
+**Rule:** Re-export all hooks from the `api_hooks` folder.
+
+```typescript
+import { INTERNAL__useGetFeatureDetail } from "./api_hooks/INTERNAL__useGetFeatureDetail";
+import { INTERNAL__usePostAction } from "./api_hooks/INTERNAL__usePostAction";
+
+export const featureApi = {
+    useGetFeatureDetail: INTERNAL__useGetFeatureDetail,
+    usePostAction: INTERNAL__usePostAction,
+};
+```

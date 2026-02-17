@@ -1,0 +1,34 @@
+FROM node:22-alpine as fe-dev
+WORKDIR /app
+RUN npm install -g pnpm@9.15.4
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+COPY package.json .
+RUN pnpm install
+CMD ["pnpm", "run","dev"]
+
+
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim as builder
+WORKDIR /build
+COPY pyproject.toml uv.lock ./
+RUN uv sync
+
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim as be-dev
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/.venv /app/.venv-docker
+
+COPY ./src/ ./src/
+COPY ./manage.py ./manage.py
+COPY ./uv.lock ./uv.lock
+COPY ./pyproject.toml ./pyproject.toml
+
+ENV VIRTUAL_ENV=/app/.venv-docker
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV UV_PROJECT_ENVIRONMENT=/app/.venv-docker
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

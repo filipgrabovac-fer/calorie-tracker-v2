@@ -1,0 +1,182 @@
+# FastAPI Client Registration Rules
+
+## Overview
+
+When adding new API endpoints to the FastAPI client, you must register them in the `packages/fast_api_client/api_client.py` file. Each folder in `packages/fast_api_client/api/` represents an API namespace class.
+
+---
+
+## Step-by-Step Registration Process
+
+### Step 1: Import the Endpoint Function
+
+Import the generated endpoint function from the appropriate API folder. Use `sync` for simple responses or `sync_detailed` for detailed responses with status codes.
+
+**Location:** Top of `api_client.py` (with other imports)
+
+**Example:**
+```python
+from .api.matchmaking_engine.delete_complementary_intent_api_matchmaking_engine_delete_complementary_intent_post import (
+    sync as delete_complementary_intent,
+)
+
+from .api.vector_store.get_document_sources_api_vector_store_document_sources_get import (
+    sync_detailed as get_document_sources,
+)
+```
+
+**When to use `sync` vs `sync_detailed`:**
+- Use `sync` for simple responses that return the data directly
+- Use `sync_detailed` when you need access to HTTP status codes or response metadata (returns `Response[Type]`)
+
+---
+
+### Step 2: Import Required Models
+
+Import the request/response models needed for type hints.
+
+**Example:**
+```python
+from .models.delete_complementary_intent_request import (
+    DeleteComplementaryIntentRequest,
+)
+from .models.http_validation_error import HTTPValidationError
+from .types import Response
+```
+
+---
+
+### Step 3: Create or Update the API Namespace Class
+
+Each folder in `api/` corresponds to an API namespace class. If the class doesn't exist, create it. Otherwise, add the new method to the existing class.
+
+**Class Structure:**
+```python
+class NewClassApi:
+    """API namespace for [description] endpoints."""
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    def endpoint_name(self, body: RequestType) -> ResponseType:
+        """Endpoint description."""
+        return endpoint_name(client=self._client, body=body)
+
+    def endpoint_with_params(
+        self,
+        param1: str,
+        param2: SomeEnum,
+    ) -> ResponseType | HTTPValidationError | None:
+        """Endpoint with path/query parameters."""
+        return endpoint_with_params(
+            param1=param1,
+            param2=param2,
+            client=self._client,
+        )
+```
+
+**Naming Conventions:**
+- Class name: `{FolderName}Api` (PascalCase, singular)
+- Method name: `snake_case` (matches endpoint function name without `sync`/`sync_detailed`)
+- Use descriptive docstrings for each method
+
+**Type Hints:**
+- Always include proper type hints for parameters and return types
+- Return types typically include `HTTPValidationError | None` for error cases
+- Use `Response[Type]` when using `sync_detailed`
+
+**Example from codebase:**
+```python
+class MatchmakingEngineApi:
+    """API namespace for matchmaking engine endpoints."""
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    def delete_complementary_intent(
+        self, body: DeleteComplementaryIntentRequest
+    ) -> Any | HTTPValidationError | None:
+        """Delete Complementary Intent."""
+        return delete_complementary_intent(client=self._client, body=body)
+```
+
+---
+
+### Step 4: Register the Class in ApiFastapi
+
+Add the new API class instance to the `ApiFastapi.__init__` method.
+
+**Location:** Inside `ApiFastapi.__init__` method
+
+**Example:**
+```python
+class ApiFastapi:
+    """Main API class providing access to all API namespaces."""
+
+    def __init__(self, client: Client) -> None:
+        self.matchmaking_engine = MatchmakingEngineApi(client)
+        self.templates = TemplatesApi(client)
+        self.vector_store = VectorStoreApi(client)
+        self.new_class = NewClassApi(client)  # Add new class here
+```
+
+**Naming Convention:**
+- Instance name: `snake_case` (matches folder name in `api/`)
+- Should be descriptive and match the API namespace
+
+---
+
+## Complete Example
+
+**Scenario:** Adding a new endpoint `update_profile` in the `profiles` folder.
+
+**1. Import:**
+```python
+from .api.profiles.update_profile_api_profiles_update_profile_put import (
+    sync as update_profile,
+)
+from .models.update_profile_request import UpdateProfileRequest
+```
+
+**2. Create/Update Class:**
+```python
+class ProfilesApi:
+    """API namespace for profiles endpoints."""
+
+    def __init__(self, client: Client) -> None:
+        self._client = client
+
+    def update_profile(
+        self, body: UpdateProfileRequest
+    ) -> Any | HTTPValidationError | None:
+        """Update Profile."""
+        return update_profile(client=self._client, body=body)
+```
+
+**3. Register:**
+```python
+class ApiFastapi:
+    def __init__(self, client: Client) -> None:
+        # ... existing registrations
+        self.profiles = ProfilesApi(client)
+```
+
+---
+
+## Important Notes
+
+1. **Folder Structure:** Each folder in `api/` should correspond to one API namespace class
+2. **Client Injection:** Always pass `client=self._client` to endpoint functions
+3. **Error Handling:** Return types should include `HTTPValidationError | None` for validation errors
+4. **Documentation:** Add docstrings to all methods describing what the endpoint does
+5. **Type Safety:** Use proper type hints from the generated models
+6. **Consistency:** Follow existing patterns in the codebase for naming and structure
+
+---
+
+## File Locations
+
+- **Main registration file:** `src/packages/fast_api_client/api_client.py`
+- **API endpoint files:** `src/packages/fast_api_client/api/{namespace}/{endpoint_file}.py`
+- **Model files:** `src/packages/fast_api_client/models/`
+- **Client instance:** Created at module level in `api_client.py` using `get_fastapi_base_url()`

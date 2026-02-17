@@ -1,0 +1,25 @@
+FROM node:22-alpine as fe-prod
+WORKDIR /app
+RUN npm install -g pnpm@9.15.4
+COPY package.json .
+RUN pnpm install
+COPY ./app ./app
+RUN pnpm run build
+
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim as be-prod
+WORKDIR /app
+
+# Install system dependencies for Debian-based image
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync
+COPY ./src ./src
+COPY ./manage.py ./manage.py
+COPY ./uv.lock ./uv.lock
+COPY ./pyproject.toml ./pyproject.toml
+COPY --from=fe-prod /app/.next/ ./
+CMD ["uv", "run", "python", "manage.py", "runserver", "0.0.0.0:8000"]

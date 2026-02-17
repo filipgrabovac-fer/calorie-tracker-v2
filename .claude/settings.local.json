@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dlx shadcn@latest init:*)",
+      "Bash(DJANGO_SETTINGS_MODULE=settings.base python manage.py makemigrations:*)",
+      "Bash(uv run python:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm tsc:*)"
+    ]
+  }
+}

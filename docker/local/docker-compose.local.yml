@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=localhost
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      target: be-dev
+      dockerfile: docker/local/dockerfile.local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./manage.py:/app/manage.py
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - /app/__pycache__
+      - /app/.venv-docker
+    environment:
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=settings.local
+      - PYTHONPATH=/app/src
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/db
+    command: uv run python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      target: fe-dev
+      dockerfile: docker/local/dockerfile.local
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    command: pnpm run dev
+
+volumes:
+  postgres_data:
