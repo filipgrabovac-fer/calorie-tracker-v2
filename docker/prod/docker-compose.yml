@@ -1,3 +1,15 @@
+x-common: &common
+  platform: linux/arm64
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+  networks:
+    - main
+    - dokploy-network
+
 services:
   db:
     image: postgres:15-alpine
@@ -14,6 +26,7 @@ services:
       retries: 5
 
   redis:
+    <<: *common
     image: redis:7-alpine
     volumes:
       - redis_data:/data
@@ -24,6 +37,7 @@ services:
       retries: 5
 
   backend:
+    <<: *common
     build:
       context: ../..
       dockerfile: docker/prod/dockerfile
@@ -43,6 +57,7 @@ services:
         condition: service_healthy
 
   frontend:
+    <<: *common
     build:
       context: ../..
       dockerfile: docker/prod/dockerfile
