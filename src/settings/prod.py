@@ -14,8 +14,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = [
     'https://*.dokploy.com',
     'https://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me',

@@ -62,9 +62,11 @@ services:
       context: ../..
       dockerfile: docker/prod/dockerfile
       target: fe-prod
+      args:
+        - NEXT_PUBLIC_API_URL=http://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me/
+      - NEXT_PUBLIC_API_URL=http://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me
     command: pnpm run start
     depends_on:
       - backend
