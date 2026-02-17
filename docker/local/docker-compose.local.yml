@@ -18,8 +18,9 @@ services:
 
   backend:
     build:
-      target: be-dev
+      context: .
       dockerfile: docker/local/dockerfile.local
+      target: be-dev
     ports:
       - "8000:8000"
     volumes:
@@ -41,8 +42,9 @@ services:
 
   frontend:
     build:
-      target: fe-dev
+      context: .
       dockerfile: docker/local/dockerfile.local
+      target: fe-dev
     ports:
       - "3000:3000"
     volumes:
