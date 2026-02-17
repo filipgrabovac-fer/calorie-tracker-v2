@@ -15,6 +15,9 @@ COPY ./components.json* ./
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN pnpm run build
+EXPOSE 4000
+ENV PORT=4000
+CMD ["pnpm", "run", "start"]
 
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim as be-prod
 WORKDIR /app
