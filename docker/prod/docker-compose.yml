@@ -74,3 +74,10 @@ services:
 volumes:
   postgres_data:
   redis_data:
+
+
+networks:
+  main:
+    driver: bridge
+  dokploy-network:
+    external: true
