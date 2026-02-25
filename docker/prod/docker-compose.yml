@@ -6,36 +6,14 @@ x-common: &common
       max-size: "10m"
       max-file: "3"
 
+  env_file:
+    - .env
+
   networks:
     - main
     - dokploy-network
 
 services:
-  db:
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_DB=project_template
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    <<: *common
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
   backend:
     <<: *common
     build:
@@ -44,17 +22,7 @@ services:
       target: be-prod
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=0
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/project_template
-      - REDIS_URL=redis://redis:6379/0
-      - DJANGO_SETTINGS_MODULE=settings.prod
     command: uv run python manage.py runserver 0.0.0.0:8000
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   frontend:
     <<: *common
@@ -63,19 +31,15 @@ services:
       dockerfile: docker/prod/dockerfile
       target: fe-prod
       args:
-        - NEXT_PUBLIC_API_URL=http://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://calorietracker-app-9bvmm7-0fabb8-46-225-125-32.traefik.me
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - PORT=4000
     ports:
       - "4000:4000"
     depends_on:
       - backend
-
-volumes:
-  postgres_data:
-  redis_data:
 
 networks:
   main:

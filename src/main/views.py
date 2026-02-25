@@ -173,7 +173,9 @@ class EstimateCaloriesViewSet(viewsets.ViewSet):
         try:
             estimated = estimate_calories(title=title, ingredients=ingredients)
         except ValueError as e:
-            return Response({"detail": str(e)}, status=400)
+            detail = str(e)
+            status = 503 if "GOOGLE_API_KEY" in detail else 400
+            return Response({"detail": detail}, status=status)
         except Exception as e:
             return Response(
                 {"detail": "Calorie estimation failed."},
