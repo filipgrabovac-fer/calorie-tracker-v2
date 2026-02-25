@@ -12,9 +12,16 @@ from drf_spectacular.types import OpenApiTypes
 from .models import CalorieEntry, PersonGoal
 from .serializers import (
     CalorieEntrySerializer,
+    EstimateCaloriesRequestSerializer,
+    EstimateCaloriesResponseSerializer,
     MonthlyDashboardSerializer,
     PersonGoalSerializer,
 )
+
+try:
+    from graph.calorie_estimation import estimate_calories
+except Exception:
+    estimate_calories = None
 
 
 class CalorieEntryViewSet(viewsets.ModelViewSet):
@@ -138,6 +145,43 @@ class MonthlyDashboardViewSet(viewsets.ViewSet):
         }
         serializer = MonthlyDashboardSerializer(data)
         return Response(serializer.data)
+
+
+class EstimateCaloriesViewSet(viewsets.ViewSet):
+    parser_classes = [JSONParser]
+
+    @extend_schema(
+        request=EstimateCaloriesRequestSerializer,
+        responses={200: EstimateCaloriesResponseSerializer},
+    )
+    def create(self, request):
+        if estimate_calories is None:
+            return Response(
+                {"detail": "Calorie estimation is not available."},
+                status=503,
+            )
+        serializer = EstimateCaloriesRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        title = data.get("title") or None
+        if title is not None and not title.strip():
+            title = None
+        ingredients = [
+            {"name": ing["name"], "weight_grams": ing.get("weight_grams")}
+            for ing in data["ingredients"]
+        ]
+        try:
+            estimated = estimate_calories(title=title, ingredients=ingredients)
+        except ValueError as e:
+            return Response({"detail": str(e)}, status=400)
+        except Exception as e:
+            return Response(
+                {"detail": "Calorie estimation failed."},
+                status=503,
+            )
+        return Response(
+            EstimateCaloriesResponseSerializer({"estimated_calories": estimated}).data
+        )
 
 
 class PersonGoalViewSet(viewsets.ModelViewSet):

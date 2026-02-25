@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { entriesApi } from "../_entries.api";
 import { INTERNAL__usePatchEntry } from "../api_hooks/INTERNAL__usePatchEntry";
 import { INTERNAL__usePostCreateEntry } from "../api_hooks/INTERNAL__usePostCreateEntry";
 import type { IngredientPayload } from "../api_hooks/INTERNAL__usePostCreateEntry";
@@ -65,14 +66,16 @@ export const AddEntryForm = ({
     return toTimeInputValue(initialDate);
   });
   const [image, setImage] = useState<File | null>(null);
-  const [ingredients, setIngredients] = useState<IngredientPayload[]>(() => {
+  const nextIngredientKeyRef = useRef(0);
+  const [ingredients, setIngredients] = useState<(IngredientPayload & { _key: string })[]>(() => {
     if (initialValues?.ingredients?.length) {
-      return initialValues.ingredients.map((ing) => ({
+      return initialValues.ingredients.map((ing, i) => ({
         name: ing.name,
         weight_grams: ing.weight_grams != null ? Number(ing.weight_grams) : null,
+        _key: `ing-init-${entryId ?? "new"}-${i}`,
       }));
     }
-    return [{ name: "", weight_grams: null }];
+    return [{ name: "", weight_grams: null, _key: "ing-0" }];
   });
 
   useEffect(() => {
@@ -84,11 +87,12 @@ export const AddEntryForm = ({
       setTimeValue(initialValues.eaten_at?.slice(11, 16) ?? toTimeInputValue(new Date()));
       setIngredients(
         initialValues.ingredients?.length
-          ? initialValues.ingredients.map((ing) => ({
+          ? initialValues.ingredients.map((ing, i) => ({
               name: ing.name,
               weight_grams: ing.weight_grams != null ? Number(ing.weight_grams) : null,
+              _key: `ing-init-${entryId}-${i}`,
             }))
-          : [{ name: "", weight_grams: null }]
+          : [{ name: "", weight_grams: null, _key: "ing-0" }]
       );
     }
   }, [entryId, initialValues]);
@@ -100,7 +104,7 @@ export const AddEntryForm = ({
     setDateValue(toDateInputValue(new Date()));
     setTimeValue(toTimeInputValue(new Date()));
     setImage(null);
-    setIngredients([{ name: "", weight_grams: null }]);
+    setIngredients([{ name: "", weight_grams: null, _key: "ing-0" }]);
     onSuccess?.();
   };
 
@@ -108,11 +112,19 @@ export const AddEntryForm = ({
     INTERNAL__usePostCreateEntry(isEditMode ? undefined : handleSuccess);
   const { mutate: patchEntry, isPending: isPatchPending } =
     INTERNAL__usePatchEntry(isEditMode ? handleSuccess : undefined);
+  const { mutate: estimateCalories, isPending: isEstimatePending } =
+    entriesApi.usePostEstimateCalories((data) => setCalories(String(data.estimated_calories)));
 
   const isPending = isCreatePending || isPatchPending;
+  const validIngredientsForEstimate = ingredients.filter((ing) => ing.name.trim() !== "");
+  const hasValidIngredients = validIngredientsForEstimate.length > 0;
 
   const addIngredient = () => {
-    setIngredients((prev) => [...prev, { name: "", weight_grams: null }]);
+    nextIngredientKeyRef.current += 1;
+    setIngredients((prev) => [
+      ...prev,
+      { name: "", weight_grams: null, _key: `ing-${nextIngredientKeyRef.current}` },
+    ]);
   };
 
   const removeIngredient = (index: number) => {
@@ -143,7 +155,9 @@ export const AddEntryForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const validIngredients = ingredients.filter((ing) => ing.name.trim() !== "");
+    const validIngredients = ingredients
+      .filter((ing) => ing.name.trim() !== "")
+      .map(({ name, weight_grams }) => ({ name, weight_grams }));
     if (isEditMode && entryId != null) {
       patchEntry({
         id: entryId,
@@ -171,27 +185,28 @@ export const AddEntryForm = ({
   const isValid = title.trim() !== "" && Number(calories) > 0;
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-6 overflow-hidden">
+      <fieldset disabled={isEstimatePending} className="flex min-w-0 flex-col gap-6 overflow-hidden">
+      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
           <Input
             id="date"
             type="date"
             value={dateValue}
             onChange={(e) => setDateValue(e.target.value)}
-            className="min-h-11 sm:min-h-0"
+            className="min-h-11 min-w-0 max-w-full sm:min-h-0"
             required
           />
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <Label htmlFor="time" className="text-sm font-medium">Time</Label>
           <Input
             id="time"
             type="time"
             value={timeValue}
             onChange={(e) => setTimeValue(e.target.value)}
-            className="min-h-11 sm:min-h-0"
+            className="min-h-11 min-w-0 max-w-full sm:min-h-0"
           />
         </div>
       </div>
@@ -220,15 +235,34 @@ export const AddEntryForm = ({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="calories" className="text-sm font-medium">Calories *</Label>
-        <Input
-          id="calories"
-          type="number"
-          min="0"
-          placeholder="e.g. 450"
-          value={calories}
-          onChange={(e) => setCalories(e.target.value)}
-          required
-        />
+        <div className="flex gap-2">
+          <Input
+            id="calories"
+            type="number"
+            min="0"
+            placeholder="e.g. 450"
+            value={calories}
+            onChange={(e) => setCalories(e.target.value)}
+            className="flex-1"
+            required
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!hasValidIngredients}
+            onClick={() =>
+              estimateCalories({
+                title: title.trim() || undefined,
+                ingredients: validIngredientsForEstimate.map(({ name, weight_grams }) => ({
+                  name,
+                  weight_grams,
+                })),
+              })
+            }
+          >
+            {isEstimatePending ? "Estimating…" : "Estimate with AI"}
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -240,7 +274,7 @@ export const AddEntryForm = ({
         </div>
         <div className="flex flex-col gap-2">
           {ingredients.map((ing, index) => (
-            <div key={`ing-${index}-${ing.name || "new"}`} className="flex gap-2">
+            <div key={ing._key} className="flex gap-2">
               <Input
                 placeholder="Ingredient name"
                 value={ing.name}
@@ -286,6 +320,7 @@ export const AddEntryForm = ({
       <Button type="submit" disabled={!isValid || isPending} className="w-full mt-2">
         {isPending ? "Saving…" : isEditMode ? "Update Entry" : "Save Entry"}
       </Button>
+      </fieldset>
     </form>
   );
 };

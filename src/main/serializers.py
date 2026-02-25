@@ -7,6 +7,30 @@ from rest_framework import serializers
 from .models import CalorieEntry, Ingredient, PersonGoal
 
 
+class EstimateCaloriesIngredientSerializer(serializers.Serializer):
+    name = serializers.CharField(allow_blank=False)
+    weight_grams = serializers.IntegerField(allow_null=True, required=False)
+
+
+class EstimateCaloriesRequestSerializer(serializers.Serializer):
+    title = serializers.CharField(allow_blank=True, required=False, default="")
+    ingredients = EstimateCaloriesIngredientSerializer(many=True)
+
+    def validate_ingredients(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one ingredient is required.")
+        names = [ing.get("name", "").strip() for ing in value if ing.get("name")]
+        if not any(names):
+            raise serializers.ValidationError(
+                "At least one ingredient must have a non-empty name."
+            )
+        return value
+
+
+class EstimateCaloriesResponseSerializer(serializers.Serializer):
+    estimated_calories = serializers.IntegerField(min_value=0)
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
