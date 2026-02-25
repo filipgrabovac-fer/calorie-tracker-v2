@@ -172,7 +172,7 @@ export const AddEntryForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-2">
           <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
           <Input
@@ -180,6 +180,7 @@ export const AddEntryForm = ({
             type="date"
             value={dateValue}
             onChange={(e) => setDateValue(e.target.value)}
+            className="min-h-11 sm:min-h-0"
             required
           />
         </div>
@@ -190,6 +191,7 @@ export const AddEntryForm = ({
             type="time"
             value={timeValue}
             onChange={(e) => setTimeValue(e.target.value)}
+            className="min-h-11 sm:min-h-0"
           />
         </div>
       </div>

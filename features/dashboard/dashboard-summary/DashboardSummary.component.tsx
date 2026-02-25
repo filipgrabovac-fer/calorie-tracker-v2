@@ -25,15 +25,33 @@ const StatCard = ({
   </Card>
 );
 
+function getTodayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export const DashboardSummary = ({ data }: DashboardSummaryProps) => {
   const {
     total_calories,
     monthly_goal,
     daily_goal,
+    daily_summaries,
     avg_calories_this_week,
     avg_calories_this_month,
     avg_calories_this_year,
   } = data;
+
+  const todayKey = getTodayKey();
+  const isViewingCurrentMonth =
+    data.year === new Date().getFullYear() &&
+    data.month === new Date().getMonth() + 1;
+  const todaySummary = isViewingCurrentMonth
+    ? daily_summaries.find((s) => s.date.slice(0, 10) === todayKey)
+    : undefined;
+  const todayCalories = todaySummary?.total_calories ?? 0;
+
+  const dailyGoalValue = isViewingCurrentMonth
+    ? `${todayCalories.toLocaleString()}/${daily_goal.toLocaleString()} kcal`
+    : `${daily_goal.toLocaleString()} kcal`;
 
   const progress =
     monthly_goal > 0
@@ -50,7 +68,8 @@ export const DashboardSummary = ({ data }: DashboardSummaryProps) => {
         />
         <StatCard
           label="Daily goal"
-          value={`${daily_goal.toLocaleString()} kcal`}
+          value={dailyGoalValue}
+          sub={isViewingCurrentMonth ? "today" : undefined}
         />
         <StatCard
           label="Avg this week"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   BarChart,
   Bar,
@@ -32,8 +33,22 @@ function useIsMobile() {
   return isMobile;
 }
 
+const CHART_BAR_FILL_LIGHT = "oklch(0.205 0 0)";
+const CHART_BAR_FILL_DARK = "oklch(0.985 0 0)";
+
 export const MonthlyChart = ({ data, year, month }: MonthlyChartProps) => {
   const isMobile = useIsMobile();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const barFill = isDark ? CHART_BAR_FILL_DARK : CHART_BAR_FILL_LIGHT;
+  const tickFill = isDark ? "oklch(0.708 0 0)" : "oklch(0.556 0 0)";
+  const gridStroke = isDark ? "oklch(1 0 0 / 10%)" : "oklch(0.922 0 0)";
+  const tooltipBg = isDark ? "oklch(0.205 0 0)" : "oklch(1 0 0)";
+  const tooltipBorder = isDark ? "oklch(1 0 0 / 10%)" : "oklch(0.922 0 0)";
+  const goalStroke = isDark
+    ? "oklch(0.704 0.191 22.216)"
+    : "oklch(0.577 0.245 27.325)";
+
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const chartData = Array.from({ length: daysInMonth }, (_, i) => {
@@ -66,17 +81,17 @@ export const MonthlyChart = ({ data, year, month }: MonthlyChartProps) => {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke={gridStroke}
                 />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: tickFontSize, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: tickFontSize, fill: tickFill }}
                   tickLine={false}
                   axisLine={false}
                   interval={isMobile ? 4 : 0}
                 />
                 <YAxis
-                  tick={{ fontSize: tickFontSize, fill: "hsl(var(--muted-foreground))" }}
+                  tick={{ fontSize: tickFontSize, fill: tickFill }}
                   tickLine={false}
                   axisLine={false}
                   width={35}
@@ -85,27 +100,27 @@ export const MonthlyChart = ({ data, year, month }: MonthlyChartProps) => {
                   formatter={(value) => [`${value ?? 0} kcal`, "Calories"]}
                   labelFormatter={(label) => `Day ${label}`}
                   contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: tooltipBg,
+                    border: `1px solid ${tooltipBorder}`,
                     borderRadius: "0.5rem",
                     fontSize: "0.75rem",
                   }}
                 />
                 <ReferenceLine
                   y={data.daily_goal}
-                  stroke="hsl(var(--destructive))"
+                  stroke={goalStroke}
                   strokeDasharray="4 4"
                   strokeWidth={2}
                   label={{
                     value: `Goal: ${data.daily_goal}`,
                     position: isMobile ? "insideTopLeft" : "insideTopRight",
                     fontSize: tickFontSize,
-                    fill: "hsl(var(--destructive))",
+                    fill: goalStroke,
                   }}
                 />
                 <Bar
                   dataKey="calories"
-                  fill="hsl(var(--primary))"
+                  fill={barFill}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
