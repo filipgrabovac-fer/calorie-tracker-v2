@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export type EntryCardProps = {
   description?: string;
   image_url?: string | null;
   ingredients: Array<{ id: number; name: string; weight_grams?: string | null }>;
+  onEdit?: (entry: EntryCardProps) => void;
 };
 
 export const EntryCard = ({
@@ -24,6 +26,7 @@ export const EntryCard = ({
   description,
   image_url,
   ingredients,
+  onEdit,
 }: EntryCardProps) => {
   const { mutate: deleteEntry, isPending } = INTERNAL__useDeleteEntry();
 
@@ -52,14 +55,26 @@ export const EntryCard = ({
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 flex-shrink-0">
               <Badge variant="secondary" className="font-medium">{calories} kcal</Badge>
+              {onEdit && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => onEdit({ id, title, calories, eaten_at, description, image_url, ingredients })}
+                  aria-label="Edit entry"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 onClick={() => deleteEntry(id)}
                 disabled={isPending}
+                aria-label="Delete entry"
               >
                 ×
               </Button>

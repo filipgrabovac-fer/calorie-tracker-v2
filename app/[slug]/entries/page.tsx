@@ -13,19 +13,43 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { MonthNavigation } from "@/features/dashboard/month-navigation/MonthNavigation.component";
 import { AddEntryForm } from "@/features/entries/add-entry-form/AddEntryForm.component";
 import { EntriesList } from "@/features/entries/entries-list/EntriesList.component";
 
 export default function EntriesPage() {
   const { slug } = useParams<{ slug: string }>();
   const today = new Date();
-  const [year] = useState(today.getFullYear());
-  const [month] = useState(today.getMonth() + 1);
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth() + 1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleSuccess = () => {
     setIsDialogOpen(false);
   };
+
+  const handlePrev = () => {
+    if (month === 1) {
+      setYear((y) => y - 1);
+      setMonth(12);
+    } else {
+      setMonth((m) => m - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (month === 12) {
+      setYear((y) => y + 1);
+      setMonth(1);
+    } else {
+      setMonth((m) => m + 1);
+    }
+  };
+
+  const defaultDate =
+    year === today.getFullYear() && month === today.getMonth() + 1
+      ? today
+      : new Date(year, month - 1, 1);
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
@@ -48,13 +72,26 @@ export default function EntriesPage() {
                 Record a new meal or snack
               </DialogDescription>
             </DialogHeader>
-            <AddEntryForm person_type={slug as "filip" | "klara"} onSuccess={handleSuccess} />
+            <AddEntryForm
+              person_type={slug as "filip" | "klara"}
+              defaultDate={defaultDate}
+              onSuccess={handleSuccess}
+            />
           </DialogContent>
         </Dialog>
       </div>
+      <MonthNavigation
+        year={year}
+        month={month}
+        onPrev={handlePrev}
+        onNext={handleNext}
+      />
       <Card className="sm:hidden">
         <CardContent className="p-4 sm:p-6">
-          <AddEntryForm person_type={slug as "filip" | "klara"} />
+          <AddEntryForm
+            person_type={slug as "filip" | "klara"}
+            defaultDate={defaultDate}
+          />
         </CardContent>
       </Card>
       <EntriesList person_type={slug} year={year} month={month} />

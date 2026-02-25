@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle/ThemeToggle.component";
 
 type NavProps = {
   person_type: "filip" | "klara";
@@ -86,13 +87,16 @@ export const Nav = ({ person_type }: NavProps) => {
             </Button>
           </div>
 
-          <Link
-            href={`/${otherPerson}`}
-            className="text-xs text-muted-foreground hover:text-foreground capitalize transition-colors whitespace-nowrap shrink-0"
-          >
-            <span className="hidden sm:inline">Switch to {otherPerson}</span>
-            <span className="sm:hidden">{otherPerson}</span>
-          </Link>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <ThemeToggle />
+            <Link
+              href={`/${otherPerson}`}
+              className="text-xs text-muted-foreground hover:text-foreground capitalize transition-colors whitespace-nowrap"
+            >
+              <span className="hidden sm:inline">Switch to {otherPerson}</span>
+              <span className="sm:hidden">{otherPerson}</span>
+            </Link>
+          </div>
         </div>
 
         {isMobileMenuOpen && (

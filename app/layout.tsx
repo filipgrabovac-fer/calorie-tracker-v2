@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GlobalStateProvider } from "./providers/GlobalStateProvider";
 import { TanstackQueryClientProvider } from "./providers/TanstackQueryClientProvider";
+import { ThemeProvider } from "./providers/ThemeProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,14 +26,16 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" style={{ background: 'transparent' }}>
+		<html lang="en" suppressHydrationWarning style={{ background: "transparent" }}>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-				style={{ background: 'transparent' }}
+				style={{ background: "transparent" }}
 			>
-				<TanstackQueryClientProvider>
-					<GlobalStateProvider>{children}</GlobalStateProvider>
-				</TanstackQueryClientProvider>
+				<ThemeProvider>
+					<TanstackQueryClientProvider>
+						<GlobalStateProvider>{children}</GlobalStateProvider>
+					</TanstackQueryClientProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);
