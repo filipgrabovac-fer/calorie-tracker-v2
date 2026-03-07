@@ -16,6 +16,7 @@ import {
 import { MonthNavigation } from "@/features/dashboard/month-navigation/MonthNavigation.component";
 import { AddEntryForm } from "@/features/entries/add-entry-form/AddEntryForm.component";
 import { EntriesList } from "@/features/entries/entries-list/EntriesList.component";
+import { QuickAddMealPicker } from "@/features/meals/quick-add-meal-picker/QuickAddMealPicker.component";
 
 export default function EntriesPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -23,6 +24,7 @@ export default function EntriesPage() {
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const handleSuccess = () => {
     setIsDialogOpen(false);
@@ -58,27 +60,30 @@ export default function EntriesPage() {
           <h2 className="text-xl sm:text-2xl font-semibold capitalize">{slug}&apos;s entries</h2>
           <p className="text-sm text-muted-foreground mt-1">View and manage your meal entries</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="hidden sm:flex">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add Entry</DialogTitle>
-              <DialogDescription>
-                Record a new meal or snack
-              </DialogDescription>
-            </DialogHeader>
-            <AddEntryForm
-              person_type={slug as "filip" | "klara"}
-              defaultDate={defaultDate}
-              onSuccess={handleSuccess}
-            />
-          </DialogContent>
-        </Dialog>
+        <div className="hidden sm:flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsQuickAddOpen(true)}>
+            Quick Add
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Entry
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Add Entry</DialogTitle>
+                <DialogDescription>Record a new meal or snack</DialogDescription>
+              </DialogHeader>
+              <AddEntryForm
+                person_type={slug as "filip" | "klara"}
+                defaultDate={defaultDate}
+                onSuccess={handleSuccess}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <MonthNavigation
         year={year}
@@ -95,6 +100,11 @@ export default function EntriesPage() {
         </CardContent>
       </Card>
       <EntriesList person_type={slug} year={year} month={month} />
+      <QuickAddMealPicker
+        person_type={slug as "filip" | "klara"}
+        open={isQuickAddOpen}
+        onOpenChange={setIsQuickAddOpen}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from rest_framework import serializers
-from .models import CalorieEntry, Ingredient, PersonGoal
+from .models import CalorieEntry, Category, Ingredient, PersonGoal, PredefinedMeal, PredefinedMealIngredient
 
 
 class EstimateCaloriesIngredientSerializer(serializers.Serializer):
@@ -37,9 +37,62 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "weight_grams"]
 
 
+class PredefinedMealIngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PredefinedMealIngredient
+        fields = ["id", "name", "weight_grams"]
+
+
+class PredefinedMealSerializer(serializers.ModelSerializer):
+    ingredients = PredefinedMealIngredientSerializer(many=True, required=False)
+
+    class Meta:
+        model = PredefinedMeal
+        fields = ["id", "name", "calories", "category", "created_at", "ingredients"]
+        read_only_fields = ["id", "created_at"]
+
+    def create(self, validated_data):
+        ingredients_data = validated_data.pop("ingredients", [])
+        meal = PredefinedMeal.objects.create(**validated_data)
+        for ing in ingredients_data:
+            PredefinedMealIngredient.objects.create(meal=meal, **ing)
+        return meal
+
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop("ingredients", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if ingredients_data is not None:
+            instance.ingredients.all().delete()
+            for ing in ingredients_data:
+                PredefinedMealIngredient.objects.create(meal=instance, **ing)
+        return instance
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    meals = PredefinedMealSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "created_at", "meals"]
+        read_only_fields = ["id", "created_at"]
+
+
 class CalorieEntrySerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True, required=False)
     image_url = serializers.SerializerMethodField()
+    predefined_meal = serializers.PrimaryKeyRelatedField(
+        queryset=PredefinedMeal.objects.all(),
+        required=False,
+        allow_null=True,
+        write_only=True,
+    )
+    predefined_meal_id = serializers.IntegerField(
+        source="predefined_meal.id",
+        read_only=True,
+        allow_null=True,
+    )
 
     class Meta:
         model = CalorieEntry
@@ -54,9 +107,23 @@ class CalorieEntrySerializer(serializers.ModelSerializer):
             "ingredients",
             "eaten_at",
             "created_at",
+            "predefined_meal",
+            "predefined_meal_id",
         ]
-        read_only_fields = ["id", "created_at", "image_url"]
-        extra_kwargs = {"image": {"write_only": True, "required": False}}
+        read_only_fields = ["id", "created_at", "image_url", "predefined_meal_id"]
+        extra_kwargs = {
+            "image": {"write_only": True, "required": False},
+            "title": {"required": False, "default": ""},
+            "calories": {"required": False, "default": 0},
+        }
+
+    def validate(self, attrs):
+        if not attrs.get("predefined_meal"):
+            if not str(attrs.get("title", "")).strip():
+                raise serializers.ValidationError({"title": "Required for manual entries."})
+            if not attrs.get("calories"):
+                raise serializers.ValidationError({"calories": "Required for manual entries."})
+        return attrs
 
     def get_image_url(self, obj):
         request = self.context.get("request")
@@ -79,11 +146,22 @@ class CalorieEntrySerializer(serializers.ModelSerializer):
         return []
 
     def create(self, validated_data):
+        predefined_meal = validated_data.pop("predefined_meal", None)
         ingredients_data = validated_data.pop("ingredients", [])
+
+        if predefined_meal is not None:
+            validated_data["title"] = predefined_meal.name
+            validated_data["calories"] = predefined_meal.calories
+            if not ingredients_data and not self.initial_data.get("ingredients"):
+                ingredients_data = list(
+                    predefined_meal.ingredients.values("name", "weight_grams")
+                )
+
         # Re-parse from raw request data if empty (handles multipart FormData)
         if not ingredients_data and self.initial_data:
             ingredients_data = self._parse_ingredients(self.initial_data)
-        entry = CalorieEntry.objects.create(**validated_data)
+
+        entry = CalorieEntry.objects.create(predefined_meal=predefined_meal, **validated_data)
         for ingredient_data in ingredients_data:
             Ingredient.objects.create(entry=entry, **ingredient_data)
         return entry

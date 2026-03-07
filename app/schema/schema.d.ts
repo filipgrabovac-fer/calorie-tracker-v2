@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/categories/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["categories_list"];
+        put?: never;
+        post: operations["categories_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/categories/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["categories_retrieve"];
+        put: operations["categories_update"];
+        post?: never;
+        delete: operations["categories_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["categories_partial_update"];
+        trace?: never;
+    };
     "/api/dashboard/": {
         parameters: {
             query?: never;
@@ -116,6 +148,38 @@ export interface paths {
         patch: operations["goals_by_person_partial_update"];
         trace?: never;
     };
+    "/api/predefined-meals/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["predefined_meals_list"];
+        put?: never;
+        post: operations["predefined_meals_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/predefined-meals/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["predefined_meals_retrieve"];
+        put: operations["predefined_meals_update"];
+        post?: never;
+        delete: operations["predefined_meals_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["predefined_meals_partial_update"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -123,8 +187,10 @@ export interface components {
         CalorieEntry: {
             readonly id: number;
             person_type: components["schemas"]["PersonTypeEnum"];
+            /** @default  */
             title: string;
             description?: string;
+            /** @default 0 */
             calories: number;
             /** Format: uri */
             image?: string | null;
@@ -134,6 +200,15 @@ export interface components {
             eaten_at?: string;
             /** Format: date-time */
             readonly created_at: string;
+            predefined_meal?: number | null;
+            readonly predefined_meal_id: number | null;
+        };
+        Category: {
+            readonly id: number;
+            name: string;
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly meals: components["schemas"]["PredefinedMeal"][];
         };
         DailyCalorieSummary: {
             /** Format: date */
@@ -177,9 +252,11 @@ export interface components {
         PatchedCalorieEntry: {
             readonly id?: number;
             person_type?: components["schemas"]["PersonTypeEnum"];
-            title?: string;
+            /** @default  */
+            title: string;
             description?: string;
-            calories?: number;
+            /** @default 0 */
+            calories: number;
             /** Format: uri */
             image?: string | null;
             readonly image_url?: string;
@@ -188,6 +265,15 @@ export interface components {
             eaten_at?: string;
             /** Format: date-time */
             readonly created_at?: string;
+            predefined_meal?: number | null;
+            readonly predefined_meal_id?: number | null;
+        };
+        PatchedCategory: {
+            readonly id?: number;
+            name?: string;
+            /** Format: date-time */
+            readonly created_at?: string;
+            readonly meals?: components["schemas"]["PredefinedMeal"][];
         };
         PatchedPersonGoal: {
             readonly id?: number;
@@ -195,6 +281,15 @@ export interface components {
             daily_goal_calories?: number;
             /** Format: date-time */
             readonly updated_at?: string;
+        };
+        PatchedPredefinedMeal: {
+            readonly id?: number;
+            name?: string;
+            calories?: number;
+            category?: number;
+            /** Format: date-time */
+            readonly created_at?: string;
+            ingredients?: components["schemas"]["PredefinedMealIngredient"][];
         };
         PersonGoal: {
             readonly id: number;
@@ -209,6 +304,21 @@ export interface components {
          * @enum {string}
          */
         PersonTypeEnum: "filip" | "klara";
+        PredefinedMeal: {
+            readonly id: number;
+            name: string;
+            calories: number;
+            category: number;
+            /** Format: date-time */
+            readonly created_at: string;
+            ingredients?: components["schemas"]["PredefinedMealIngredient"][];
+        };
+        PredefinedMealIngredient: {
+            readonly id: number;
+            name: string;
+            /** Format: decimal */
+            weight_grams?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -218,6 +328,149 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    categories_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"][];
+                };
+            };
+        };
+    };
+    categories_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Category"];
+                "application/x-www-form-urlencoded": components["schemas"]["Category"];
+                "multipart/form-data": components["schemas"]["Category"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    categories_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    categories_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Category"];
+                "application/x-www-form-urlencoded": components["schemas"]["Category"];
+                "multipart/form-data": components["schemas"]["Category"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
+    categories_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    categories_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this category. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedCategory"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedCategory"];
+                "multipart/form-data": components["schemas"]["PatchedCategory"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Category"];
+                };
+            };
+        };
+    };
     dashboard_list: {
         parameters: {
             query: {
@@ -573,6 +826,149 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PersonGoal"];
+                };
+            };
+        };
+    };
+    predefined_meals_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredefinedMeal"][];
+                };
+            };
+        };
+    };
+    predefined_meals_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PredefinedMeal"];
+                "application/x-www-form-urlencoded": components["schemas"]["PredefinedMeal"];
+                "multipart/form-data": components["schemas"]["PredefinedMeal"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredefinedMeal"];
+                };
+            };
+        };
+    };
+    predefined_meals_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this predefined meal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredefinedMeal"];
+                };
+            };
+        };
+    };
+    predefined_meals_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this predefined meal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PredefinedMeal"];
+                "application/x-www-form-urlencoded": components["schemas"]["PredefinedMeal"];
+                "multipart/form-data": components["schemas"]["PredefinedMeal"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredefinedMeal"];
+                };
+            };
+        };
+    };
+    predefined_meals_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this predefined meal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    predefined_meals_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this predefined meal. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPredefinedMeal"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPredefinedMeal"];
+                "multipart/form-data": components["schemas"]["PatchedPredefinedMeal"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PredefinedMeal"];
                 };
             };
         };

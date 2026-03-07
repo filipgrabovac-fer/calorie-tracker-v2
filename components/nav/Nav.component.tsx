@@ -15,6 +15,7 @@ type NavProps = {
 const navLinks = (slug: string) => [
   { href: `/${slug}`, label: "Dashboard" },
   { href: `/${slug}/entries`, label: "Entries" },
+  { href: `/${slug}/meals`, label: "Meals" },
   { href: `/${slug}/settings`, label: "Settings" },
 ];
 

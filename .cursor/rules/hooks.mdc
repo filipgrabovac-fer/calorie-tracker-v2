@@ -17,15 +17,17 @@ alwaysApply: true
 ---
 
 ## 2. Directory Structure
+
 For every feature (e.g., `dashboard`, `participant`), you must adhere to this folder structure:
 
+```
 src/[feature-folder]/
-├── api_hooks/                   # Folder containing individual hook files
+├── api_hooks/                      # Folder containing individual hook files
 │   ├── INTERNAL__useGet[Entity].ts
 │   └── INTERNAL__usePost[Action].ts
-├── _[feature-name].queries.ts   # Definitions for Query Keys & Fetch Functions (GET)
-└── _[feature-name].api.ts       # Aggregator file exporting all hooks for this feature
-
+├── _[feature-name].queries.ts      # Definitions for Query Keys & Fetch Functions (GET)
+└── _[feature-name].api.ts          # Aggregator file exporting all hooks for this feature
+```
 
 ## 3. Rules for GET Requests (Queries)
 

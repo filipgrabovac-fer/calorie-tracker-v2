@@ -9,13 +9,15 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from .models import CalorieEntry, PersonGoal
+from .models import CalorieEntry, Category, PersonGoal, PredefinedMeal
 from .serializers import (
     CalorieEntrySerializer,
+    CategorySerializer,
     EstimateCaloriesRequestSerializer,
     EstimateCaloriesResponseSerializer,
     MonthlyDashboardSerializer,
     PersonGoalSerializer,
+    PredefinedMealSerializer,
 )
 
 try:
@@ -184,6 +186,22 @@ class EstimateCaloriesViewSet(viewsets.ViewSet):
         return Response(
             EstimateCaloriesResponseSerializer({"estimated_calories": estimated}).data
         )
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    queryset = Category.objects.prefetch_related("meals__ingredients")
+
+
+class PredefinedMealViewSet(viewsets.ModelViewSet):
+    serializer_class = PredefinedMealSerializer
+
+    def get_queryset(self):
+        qs = PredefinedMeal.objects.prefetch_related("ingredients")
+        category = self.request.query_params.get("category")
+        if category:
+            qs = qs.filter(category_id=category)
+        return qs
 
 
 class PersonGoalViewSet(viewsets.ModelViewSet):
