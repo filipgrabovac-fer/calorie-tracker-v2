@@ -10,13 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { AddEntryForm } from "../add-entry-form/AddEntryForm.component";
 import type { EntryInitialValues } from "../add-entry-form/AddEntryForm.component";
-import { INTERNAL__useGetEntries } from "../api_hooks/INTERNAL__useGetEntries";
+import { INTERNAL__useGetAllEntries } from "../api_hooks/INTERNAL__useGetAllEntries";
 import { EntryCard } from "../entry-card/EntryCard.component";
 
 type EntriesListProps = {
   person_type: string;
-  year: number;
-  month: number;
 };
 
 type EntryCardProps = {
@@ -47,14 +45,10 @@ function formatDayLabel(dateKey: string, todayKey: string): string {
   });
 }
 
-export const EntriesList = ({ person_type, year, month }: EntriesListProps) => {
+export const EntriesList = ({ person_type }: EntriesListProps) => {
   const [entryToEdit, setEntryToEdit] = useState<EntryCardProps | null>(null);
 
-  const { data: entries, isLoading, isError } = INTERNAL__useGetEntries({
-    person_type,
-    year,
-    month,
-  });
+  const { data: entries, isLoading, isError } = INTERNAL__useGetAllEntries(person_type);
 
   const groupedByDay = useMemo(() => {
     if (!entries || (entries as EntryCardProps[]).length === 0) return [];
@@ -95,7 +89,7 @@ export const EntriesList = ({ person_type, year, month }: EntriesListProps) => {
   if (groupedByDay.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-2">
-        <p className="text-muted-foreground text-sm">No entries yet this month.</p>
+        <p className="text-muted-foreground text-sm">No entries yet.</p>
         <p className="text-xs text-muted-foreground">Add your first meal to get started.</p>
       </div>
     );

@@ -2,27 +2,20 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Plus, Zap } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { MonthNavigation } from "@/features/dashboard/month-navigation/MonthNavigation.component";
 import { AddEntryForm } from "@/features/entries/add-entry-form/AddEntryForm.component";
 import { EntriesList } from "@/features/entries/entries-list/EntriesList.component";
 import { QuickAddMealPicker } from "@/features/meals/quick-add-meal-picker/QuickAddMealPicker.component";
 
 export default function EntriesPage() {
   const { slug } = useParams<{ slug: string }>();
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth() + 1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
@@ -30,85 +23,62 @@ export default function EntriesPage() {
     setIsDialogOpen(false);
   };
 
-  const handlePrev = () => {
-    if (month === 1) {
-      setYear((y) => y - 1);
-      setMonth(12);
-    } else {
-      setMonth((m) => m - 1);
-    }
-  };
-
-  const handleNext = () => {
-    if (month === 12) {
-      setYear((y) => y + 1);
-      setMonth(1);
-    } else {
-      setMonth((m) => m + 1);
-    }
-  };
-
-  const defaultDate =
-    year === today.getFullYear() && month === today.getMonth() + 1
-      ? today
-      : new Date(year, month - 1, 1);
-
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-semibold capitalize">{slug}&apos;s entries</h2>
-          <p className="text-sm text-muted-foreground mt-1">View and manage your meal entries</p>
-        </div>
-        <div className="hidden sm:flex items-center gap-2">
-          <Button variant="outline" onClick={() => setIsQuickAddOpen(true)}>
-            Quick Add
-          </Button>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Entry
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Add Entry</DialogTitle>
-                <DialogDescription>Record a new meal or snack</DialogDescription>
-              </DialogHeader>
-              <AddEntryForm
-                person_type={slug as "filip" | "klara"}
-                defaultDate={defaultDate}
-                onSuccess={handleSuccess}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-semibold capitalize">{slug}&apos;s entries</h2>
+        <p className="text-sm text-muted-foreground mt-1">View and manage your meal entries</p>
       </div>
-      <MonthNavigation
-        year={year}
-        month={month}
-        onPrev={handlePrev}
-        onNext={handleNext}
-      />
-      <div className="sm:hidden">
-        <Button
-          variant="outline"
-          className="w-full"
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          type="button"
           onClick={() => setIsQuickAddOpen(true)}
+          className="group flex items-center gap-4 rounded-xl border-2 border-dashed border-border p-5 hover:border-primary hover:bg-primary/5 transition-all text-left"
         >
-          Quick Add from Meals
-        </Button>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted group-hover:bg-primary/10 transition-colors">
+            <Zap className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Quick Add</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Add from predefined meals instantly</p>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setIsDialogOpen(true)}
+          className="group flex items-center gap-4 rounded-xl bg-primary p-5 text-primary-foreground hover:bg-primary/90 active:bg-primary/80 transition-all text-left"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15">
+            <Plus className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm">Add Entry</p>
+            <p className="text-xs text-primary-foreground/70 mt-0.5">Record a new meal or snack</p>
+          </div>
+        </button>
       </div>
-      <Card className="sm:hidden">
-        <CardContent className="p-4 sm:p-6">
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add Entry</DialogTitle>
+            <DialogDescription>Record a new meal or snack</DialogDescription>
+          </DialogHeader>
           <AddEntryForm
             person_type={slug as "filip" | "klara"}
-            defaultDate={defaultDate}
+            defaultDate={new Date()}
+            onSuccess={handleSuccess}
           />
-        </CardContent>
-      </Card>
-      <EntriesList person_type={slug} year={year} month={month} />
+        </DialogContent>
+      </Dialog>
+
+      <div>
+        <h3 className="text-base font-semibold mb-4">Previous Entries</h3>
+        <EntriesList person_type={slug} />
+      </div>
+
       <QuickAddMealPicker
         person_type={slug as "filip" | "klara"}
         open={isQuickAddOpen}

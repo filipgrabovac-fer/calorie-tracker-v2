@@ -13,6 +13,17 @@ export const entriesKeys = createQueryKeys("entries", {
       return response.data;
     },
   }),
+  all: (filters: { person_type: string }) => ({
+    queryKey: [filters],
+    queryFn: async () => {
+      const response = await untypedApiClient.GET("/api/entries/", {
+        params: { query: filters },
+      });
+      const { error } = response;
+      if (error) throw new Error("Failed to fetch entries", { cause: error });
+      return response.data;
+    },
+  }),
   detail: (id: number) => ({
     queryKey: [id],
     queryFn: async () => {
