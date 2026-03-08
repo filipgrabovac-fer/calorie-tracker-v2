@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoalForm } from "@/features/goals/goal-form/GoalForm.component";
+import { AutoAddToggle } from "@/features/goals/auto-add-toggle/AutoAddToggle.component";
 
 export default function SettingsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -20,6 +21,14 @@ export default function SettingsPage() {
       <Card>
         <CardContent className="p-4 sm:p-6">
           <GoalForm person_type={slug} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
+          <div>
+            <p className="text-sm font-semibold">Meal Plan</p>
+          </div>
+          <AutoAddToggle person_type={slug} />
         </CardContent>
       </Card>
     </div>

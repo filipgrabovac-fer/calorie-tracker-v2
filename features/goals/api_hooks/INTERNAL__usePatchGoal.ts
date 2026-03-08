@@ -9,14 +9,15 @@ export const INTERNAL__usePatchGoal = () => {
   return useMutation({
     mutationFn: async ({
       person_type,
-      daily_goal_calories,
+      ...body
     }: {
       person_type: string;
-      daily_goal_calories: number;
+      daily_goal_calories?: number;
+      auto_add_meal_plan?: boolean;
     }) => {
       const response = await untypedApiClient.PATCH("/api/goals/by-person/", {
         params: { query: { person_type } },
-        body: { daily_goal_calories },
+        body,
       });
       if (response.error)
         throw new Error("Failed to update goal", { cause: response.error });

@@ -9,12 +9,16 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from .models import CalorieEntry, Category, PersonGoal, PredefinedMeal
+from .models import CalorieEntry, Category, MealPlan, PersonGoal, PredefinedMeal
 from .serializers import (
+    BulkCreateMealPlanSerializer,
+    BulkDeleteMealPlanSerializer,
     CalorieEntrySerializer,
     CategorySerializer,
     EstimateCaloriesRequestSerializer,
     EstimateCaloriesResponseSerializer,
+    MarkProcessedMealPlanSerializer,
+    MealPlanSerializer,
     MonthlyDashboardSerializer,
     PersonGoalSerializer,
     PredefinedMealSerializer,
@@ -202,6 +206,54 @@ class PredefinedMealViewSet(viewsets.ModelViewSet):
         if category:
             qs = qs.filter(category_id=category)
         return qs
+
+
+class MealPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = MealPlanSerializer
+
+    def get_queryset(self):
+        qs = MealPlan.objects.select_related("predefined_meal")
+        person_type = self.request.query_params.get("person_type")
+        week_start = self.request.query_params.get("week_start")
+        date_param = self.request.query_params.get("date")
+        is_processed = self.request.query_params.get("is_processed")
+        if person_type:
+            qs = qs.filter(person_type=person_type)
+        if week_start:
+            start = date.fromisoformat(week_start)
+            qs = qs.filter(date__gte=start, date__lte=start + timedelta(days=6))
+        if date_param:
+            qs = qs.filter(date=date_param)
+        if is_processed is not None:
+            qs = qs.filter(is_processed=is_processed.lower() == "true")
+        return qs
+
+    @action(detail=False, methods=["post"], url_path="bulk-create")
+    def bulk_create(self, request):
+        s = BulkCreateMealPlanSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        meal = PredefinedMeal.objects.get(pk=s.validated_data["predefined_meal_id"])
+        plans = MealPlan.objects.bulk_create([
+            MealPlan(person_type=s.validated_data["person_type"], date=d, predefined_meal=meal)
+            for d in s.validated_data["dates"]
+        ])
+        return Response(MealPlanSerializer(plans, many=True).data, status=201)
+
+    @action(detail=False, methods=["post"], url_path="bulk-delete")
+    def bulk_delete(self, request):
+        s = BulkDeleteMealPlanSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        MealPlan.objects.filter(pk__in=s.validated_data["ids"]).delete()
+        return Response(status=204)
+
+    @action(detail=False, methods=["post"], url_path="mark-processed")
+    def mark_processed(self, request):
+        s = MarkProcessedMealPlanSerializer(data=request.data)
+        s.is_valid(raise_exception=True)
+        ids = s.validated_data["ids"]
+        MealPlan.objects.filter(pk__in=ids).update(is_processed=True)
+        plans = MealPlan.objects.filter(pk__in=ids).select_related("predefined_meal")
+        return Response(MealPlanSerializer(plans, many=True).data)
 
 
 class PersonGoalViewSet(viewsets.ModelViewSet):

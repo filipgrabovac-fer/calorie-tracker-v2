@@ -7,7 +7,8 @@
       "Bash(DJANGO_SETTINGS_MODULE=settings.base python manage.py makemigrations:*)",
       "Bash(uv run python:*)",
       "Bash(pnpm dlx:*)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(make schema)"
     ]
   }
 }

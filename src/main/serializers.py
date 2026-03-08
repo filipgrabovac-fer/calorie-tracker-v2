@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from rest_framework import serializers
-from .models import CalorieEntry, Category, Ingredient, PersonGoal, PredefinedMeal, PredefinedMealIngredient
+from .models import CalorieEntry, Category, Ingredient, MealPlan, PersonGoal, PredefinedMeal, PredefinedMealIngredient
 
 
 class EstimateCaloriesIngredientSerializer(serializers.Serializer):
@@ -200,5 +200,32 @@ class MonthlyDashboardSerializer(serializers.Serializer):
 class PersonGoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonGoal
-        fields = ["id", "person_type", "daily_goal_calories", "updated_at"]
+        fields = ["id", "person_type", "daily_goal_calories", "auto_add_meal_plan", "updated_at"]
         read_only_fields = ["id", "updated_at"]
+
+
+class MealPlanSerializer(serializers.ModelSerializer):
+    predefined_meal_name = serializers.CharField(source="predefined_meal.name", read_only=True)
+    predefined_meal_calories = serializers.IntegerField(source="predefined_meal.calories", read_only=True)
+
+    class Meta:
+        model = MealPlan
+        fields = [
+            "id", "person_type", "date", "predefined_meal", "predefined_meal_name",
+            "predefined_meal_calories", "is_processed", "created_at",
+        ]
+        read_only_fields = ["id", "predefined_meal_name", "predefined_meal_calories", "is_processed", "created_at"]
+
+
+class BulkCreateMealPlanSerializer(serializers.Serializer):
+    person_type = serializers.ChoiceField(choices=[("filip", "Filip"), ("klara", "Klara")])
+    dates = serializers.ListField(child=serializers.DateField(), min_length=1)
+    predefined_meal_id = serializers.IntegerField()
+
+
+class BulkDeleteMealPlanSerializer(serializers.Serializer):
+    ids = serializers.ListField(child=serializers.IntegerField(), min_length=1)
+
+
+class MarkProcessedMealPlanSerializer(serializers.Serializer):
+    ids = serializers.ListField(child=serializers.IntegerField(), min_length=1)

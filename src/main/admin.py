@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import CalorieEntry, Category, Ingredient, PersonGoal, PredefinedMeal, PredefinedMealIngredient
+from .models import CalorieEntry, Category, Ingredient, MealPlan, PersonGoal, PredefinedMeal, PredefinedMealIngredient
 
 
 class IngredientInline(admin.TabularInline):
@@ -21,7 +21,13 @@ class CalorieEntryAdmin(admin.ModelAdmin):
 
 @admin.register(PersonGoal)
 class PersonGoalAdmin(admin.ModelAdmin):
-    list_display = ["person_type", "daily_goal_calories", "updated_at"]
+    list_display = ["person_type", "daily_goal_calories", "auto_add_meal_plan", "updated_at"]
+
+
+@admin.register(MealPlan)
+class MealPlanAdmin(admin.ModelAdmin):
+    list_display = ["person_type", "date", "predefined_meal", "is_processed"]
+    list_filter = ["person_type", "is_processed"]
 
 
 @admin.register(Category)

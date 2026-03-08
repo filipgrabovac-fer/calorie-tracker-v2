@@ -148,6 +148,86 @@ export interface paths {
         patch: operations["goals_by_person_partial_update"];
         trace?: never;
     };
+    "/api/meal-plans/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["meal_plans_list"];
+        put?: never;
+        post: operations["meal_plans_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meal-plans/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["meal_plans_retrieve"];
+        put: operations["meal_plans_update"];
+        post?: never;
+        delete: operations["meal_plans_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["meal_plans_partial_update"];
+        trace?: never;
+    };
+    "/api/meal-plans/bulk-create/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["meal_plans_bulk_create_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meal-plans/bulk-delete/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["meal_plans_bulk_delete_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/meal-plans/mark-processed/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["meal_plans_mark_processed_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/predefined-meals/": {
         parameters: {
             query?: never;
@@ -234,6 +314,18 @@ export interface components {
             /** Format: decimal */
             weight_grams?: string | null;
         };
+        MealPlan: {
+            readonly id: number;
+            person_type: components["schemas"]["PersonTypeEnum"];
+            /** Format: date */
+            date: string;
+            predefined_meal: number;
+            readonly predefined_meal_name: string;
+            readonly predefined_meal_calories: number;
+            readonly is_processed: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
         MonthlyDashboard: {
             person_type: string;
             year: number;
@@ -275,10 +367,23 @@ export interface components {
             readonly created_at?: string;
             readonly meals?: components["schemas"]["PredefinedMeal"][];
         };
+        PatchedMealPlan: {
+            readonly id?: number;
+            person_type?: components["schemas"]["PersonTypeEnum"];
+            /** Format: date */
+            date?: string;
+            predefined_meal?: number;
+            readonly predefined_meal_name?: string;
+            readonly predefined_meal_calories?: number;
+            readonly is_processed?: boolean;
+            /** Format: date-time */
+            readonly created_at?: string;
+        };
         PatchedPersonGoal: {
             readonly id?: number;
             person_type?: components["schemas"]["PersonTypeEnum"];
             daily_goal_calories?: number;
+            auto_add_meal_plan?: boolean;
             /** Format: date-time */
             readonly updated_at?: string;
         };
@@ -295,6 +400,7 @@ export interface components {
             readonly id: number;
             person_type: components["schemas"]["PersonTypeEnum"];
             daily_goal_calories?: number;
+            auto_add_meal_plan?: boolean;
             /** Format: date-time */
             readonly updated_at: string;
         };
@@ -826,6 +932,224 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PersonGoal"];
+                };
+            };
+        };
+    };
+    meal_plans_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"][];
+                };
+            };
+        };
+    };
+    meal_plans_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["MealPlan"];
+                "multipart/form-data": components["schemas"]["MealPlan"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this meal plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this meal plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["MealPlan"];
+                "multipart/form-data": components["schemas"]["MealPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this meal plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    meal_plans_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this meal plan. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedMealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedMealPlan"];
+                "multipart/form-data": components["schemas"]["PatchedMealPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_bulk_create_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["MealPlan"];
+                "multipart/form-data": components["schemas"]["MealPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_bulk_delete_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["MealPlan"];
+                "multipart/form-data": components["schemas"]["MealPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
+                };
+            };
+        };
+    };
+    meal_plans_mark_processed_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MealPlan"];
+                "application/x-www-form-urlencoded": components["schemas"]["MealPlan"];
+                "multipart/form-data": components["schemas"]["MealPlan"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MealPlan"];
                 };
             };
         };

@@ -5,6 +5,7 @@ export type PersonGoal = {
   id: number;
   person_type: string;
   daily_goal_calories: number;
+  auto_add_meal_plan: boolean;
   updated_at: string;
 };
 
