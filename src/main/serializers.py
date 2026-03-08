@@ -14,6 +14,7 @@ class EstimateCaloriesIngredientSerializer(serializers.Serializer):
 
 class EstimateCaloriesRequestSerializer(serializers.Serializer):
     title = serializers.CharField(allow_blank=True, required=False, default="")
+    description = serializers.CharField(allow_blank=True, required=False, default="")
     ingredients = EstimateCaloriesIngredientSerializer(many=True)
 
     def validate_ingredients(self, value):
@@ -200,7 +201,7 @@ class MonthlyDashboardSerializer(serializers.Serializer):
 class PersonGoalSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonGoal
-        fields = ["id", "person_type", "daily_goal_calories", "auto_add_meal_plan", "updated_at"]
+        fields = ["id", "person_type", "daily_goal_calories", "auto_add_meal_plan", "estimation_notes", "updated_at"]
         read_only_fields = ["id", "updated_at"]
 
 

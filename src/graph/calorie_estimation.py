@@ -12,14 +12,17 @@ class CalorieEstimateOutput(BaseModel):
 
 class CalorieEstimationState(TypedDict):
     title: str | None
+    description: str | None
     ingredients: list[dict[str, Any]]
     estimated_calories: int | None
 
 
-def _build_prompt(title: str | None, ingredients: list[dict[str, Any]]) -> str:
+def _build_prompt(title: str | None, description: str | None, ingredients: list[dict[str, Any]]) -> str:
     parts = []
     if title:
         parts.append(f"Meal: {title}")
+    if description:
+        parts.append(f"Notes: {description}")
     parts.append("Ingredients:")
     for ing in ingredients:
         name = ing.get("name", "").strip()
@@ -34,7 +37,7 @@ def _build_prompt(title: str | None, ingredients: list[dict[str, Any]]) -> str:
 
 
 def _estimate_node(state: CalorieEstimationState) -> dict[str, Any]:
-    prompt = _build_prompt(state["title"], state["ingredients"])
+    prompt = _build_prompt(state["title"], state["description"], state["ingredients"])
     if not prompt.strip():
         return {"estimated_calories": None}
 
@@ -70,9 +73,9 @@ def build_calorie_estimation_graph() -> StateGraph:
     return graph.compile()
 
 
-def estimate_calories(title: str | None, ingredients: list[dict[str, Any]]) -> int:
+def estimate_calories(title: str | None, ingredients: list[dict[str, Any]], description: str | None = None) -> int:
     compiled = build_calorie_estimation_graph()
-    result = compiled.invoke({"title": title, "ingredients": ingredients, "estimated_calories": None})
+    result = compiled.invoke({"title": title, "description": description, "ingredients": ingredients, "estimated_calories": None})
     estimated = result.get("estimated_calories")
     if estimated is None:
         raise ValueError("Could not estimate calories from the given ingredients")

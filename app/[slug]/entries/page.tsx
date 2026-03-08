@@ -91,6 +91,15 @@ export default function EntriesPage() {
         onPrev={handlePrev}
         onNext={handleNext}
       />
+      <div className="sm:hidden">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setIsQuickAddOpen(true)}
+        >
+          Quick Add from Meals
+        </Button>
+      </div>
       <Card className="sm:hidden">
         <CardContent className="p-4 sm:p-6">
           <AddEntryForm

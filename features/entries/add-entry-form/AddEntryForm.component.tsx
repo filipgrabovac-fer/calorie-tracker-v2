@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { goalsApi } from "@/features/goals/_goals.api";
 import { entriesApi } from "../_entries.api";
 import { INTERNAL__usePatchEntry } from "../api_hooks/INTERNAL__usePatchEntry";
 import { INTERNAL__usePostCreateEntry } from "../api_hooks/INTERNAL__usePostCreateEntry";
@@ -114,6 +115,8 @@ export const AddEntryForm = ({
     INTERNAL__usePatchEntry(isEditMode ? handleSuccess : undefined);
   const { mutate: estimateCalories, isPending: isEstimatePending } =
     entriesApi.usePostEstimateCalories((data) => setCalories(String(data.estimated_calories)));
+  const { data: goal } = goalsApi.useGetGoal(person_type);
+  const estimationNotes = (goal as any)?.estimation_notes ?? "";
 
   const isPending = isCreatePending || isPatchPending;
   const validIngredientsForEstimate = ingredients.filter((ing) => ing.name.trim() !== "");
@@ -195,7 +198,7 @@ export const AddEntryForm = ({
             type="date"
             value={dateValue}
             onChange={(e) => setDateValue(e.target.value)}
-            className="min-h-11 min-w-0 max-w-full sm:min-h-0"
+            className="min-h-11 min-w-0 max-w-full sm:min-h-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
             required
           />
         </div>
@@ -206,7 +209,7 @@ export const AddEntryForm = ({
             type="time"
             value={timeValue}
             onChange={(e) => setTimeValue(e.target.value)}
-            className="min-h-11 min-w-0 max-w-full sm:min-h-0"
+            className="min-h-11 min-w-0 max-w-full sm:min-h-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
           />
         </div>
       </div>
@@ -250,15 +253,17 @@ export const AddEntryForm = ({
             type="button"
             variant="secondary"
             disabled={!hasValidIngredients}
-            onClick={() =>
+            onClick={() => {
+              const descParts = [description.trim(), estimationNotes.trim()].filter(Boolean);
               estimateCalories({
                 title: title.trim() || undefined,
+                description: descParts.length ? descParts.join("\n\n") : undefined,
                 ingredients: validIngredientsForEstimate.map(({ name, weight_grams }) => ({
                   name,
                   weight_grams,
                 })),
-              })
-            }
+              });
+            }}
           >
             {isEstimatePending ? "Estimating…" : "Estimate with AI"}
           </Button>

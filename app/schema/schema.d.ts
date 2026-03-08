@@ -303,6 +303,8 @@ export interface components {
         EstimateCaloriesRequest: {
             /** @default  */
             title: string;
+            /** @default  */
+            description: string;
             ingredients: components["schemas"]["EstimateCaloriesIngredient"][];
         };
         EstimateCaloriesResponse: {
@@ -384,6 +386,7 @@ export interface components {
             person_type?: components["schemas"]["PersonTypeEnum"];
             daily_goal_calories?: number;
             auto_add_meal_plan?: boolean;
+            estimation_notes?: string;
             /** Format: date-time */
             readonly updated_at?: string;
         };
@@ -401,6 +404,7 @@ export interface components {
             person_type: components["schemas"]["PersonTypeEnum"];
             daily_goal_calories?: number;
             auto_add_meal_plan?: boolean;
+            estimation_notes?: string;
             /** Format: date-time */
             readonly updated_at: string;
         };

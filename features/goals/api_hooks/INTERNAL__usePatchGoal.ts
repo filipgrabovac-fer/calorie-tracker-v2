@@ -14,6 +14,7 @@ export const INTERNAL__usePatchGoal = () => {
       person_type: string;
       daily_goal_calories?: number;
       auto_add_meal_plan?: boolean;
+      estimation_notes?: string;
     }) => {
       const response = await untypedApiClient.PATCH("/api/goals/by-person/", {
         params: { query: { person_type } },

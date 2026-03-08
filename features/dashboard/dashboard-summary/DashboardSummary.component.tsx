@@ -62,11 +62,6 @@ export const DashboardSummary = ({ data }: DashboardSummaryProps) => {
     <div className="flex flex-col gap-4 sm:gap-5">
       <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4">
         <StatCard
-          label="Month total"
-          value={`${total_calories.toLocaleString()} kcal`}
-          sub={`${progress}% of ${monthly_goal.toLocaleString()} goal`}
-        />
-        <StatCard
           label="Daily goal"
           value={dailyGoalValue}
           sub={isViewingCurrentMonth ? "today" : undefined}
@@ -81,12 +76,17 @@ export const DashboardSummary = ({ data }: DashboardSummaryProps) => {
           value={`${avg_calories_this_month.toLocaleString()} kcal`}
           sub="days with entries"
         />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <StatCard
           label="Avg this year"
           value={`${avg_calories_this_year.toLocaleString()} kcal`}
           sub="per day with entries"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <StatCard
+          label="Month total"
+          value={`${total_calories.toLocaleString()} kcal`}
+          sub={`${progress}% of ${monthly_goal.toLocaleString()} goal`}
         />
         <StatCard
           label="Monthly goal"

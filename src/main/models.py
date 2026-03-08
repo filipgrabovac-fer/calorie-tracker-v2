@@ -15,6 +15,7 @@ class PersonGoal(models.Model):
     )
     daily_goal_calories = models.PositiveIntegerField(default=2000)
     auto_add_meal_plan = models.BooleanField(default=False)
+    estimation_notes = models.TextField(blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

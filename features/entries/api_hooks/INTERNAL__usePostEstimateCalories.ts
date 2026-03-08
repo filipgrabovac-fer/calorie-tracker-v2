@@ -5,6 +5,7 @@ import { untypedApiClient } from "@/app/schema/apiClient";
 
 export type EstimateCaloriesPayload = {
   title?: string;
+  description?: string;
   ingredients: Array<{ name: string; weight_grams?: number | null }>;
 };
 

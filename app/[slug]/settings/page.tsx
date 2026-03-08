@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoalForm } from "@/features/goals/goal-form/GoalForm.component";
 import { AutoAddToggle } from "@/features/goals/auto-add-toggle/AutoAddToggle.component";
+import { EstimationNotesForm } from "@/features/goals/estimation-notes-form/EstimationNotesForm.component";
 
 export default function SettingsPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +30,17 @@ export default function SettingsPage() {
             <p className="text-sm font-semibold">Meal Plan</p>
           </div>
           <AutoAddToggle person_type={slug} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="p-4 sm:p-6 flex flex-col gap-4">
+          <div>
+            <p className="text-sm font-semibold">AI Estimation Notes</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Automatically appended when estimating calories for new entries.
+            </p>
+          </div>
+          <EstimationNotesForm person_type={slug} />
         </CardContent>
       </Card>
     </div>

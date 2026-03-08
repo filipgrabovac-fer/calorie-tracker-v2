@@ -45,7 +45,6 @@ export const WeekNavigation = ({ weekStart, onPrev, onNext }: WeekNavigationProp
         variant="outline"
         size="sm"
         onClick={onNext}
-        disabled={isCurrentWeek}
         className="shrink-0"
       >
         →
