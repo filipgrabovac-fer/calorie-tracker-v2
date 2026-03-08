@@ -13,7 +13,7 @@ export const entriesKeys = createQueryKeys("entries", {
       return response.data;
     },
   }),
-  all: (filters: { person_type: string }) => ({
+  listAll: (filters: { person_type: string }) => ({
     queryKey: [filters],
     queryFn: async () => {
       const response = await untypedApiClient.GET("/api/entries/", {

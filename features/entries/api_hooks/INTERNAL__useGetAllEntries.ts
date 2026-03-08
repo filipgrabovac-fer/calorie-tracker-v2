@@ -5,6 +5,6 @@ import { queries } from "@/api/queries";
 
 export const INTERNAL__useGetAllEntries = (person_type: string) => {
   return useQuery({
-    ...queries.entries.all({ person_type }),
+    ...queries.entries.listAll({ person_type }),
   });
 };
