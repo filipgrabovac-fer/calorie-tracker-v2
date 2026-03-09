@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from rest_framework import serializers
-from .models import CalorieEntry, Category, Ingredient, MealPlan, PersonGoal, PredefinedMeal, PredefinedMealIngredient
+from .models import CalorieEntry, Category, Ingredient, MealPlan, PersonGoal, PredefinedMeal, PredefinedMealIngredient, Recipe, RecipeIngredient, RecipeStep
 
 
 class EstimateCaloriesIngredientSerializer(serializers.Serializer):
@@ -230,3 +230,53 @@ class BulkDeleteMealPlanSerializer(serializers.Serializer):
 
 class MarkProcessedMealPlanSerializer(serializers.Serializer):
     ids = serializers.ListField(child=serializers.IntegerField(), min_length=1)
+
+
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeIngredient
+        fields = ["id", "name", "amount"]
+        read_only_fields = ["id"]
+
+
+class RecipeStepSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecipeStep
+        fields = ["id", "title", "description"]
+        read_only_fields = ["id"]
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    ingredients = RecipeIngredientSerializer(many=True, required=False)
+    steps = RecipeStepSerializer(many=True, required=False)
+
+    class Meta:
+        model = Recipe
+        fields = ["id", "title", "description", "created_at", "ingredients", "steps"]
+        read_only_fields = ["id", "created_at"]
+
+    def create(self, validated_data):
+        ingredients_data = validated_data.pop("ingredients", [])
+        steps_data = validated_data.pop("steps", [])
+        recipe = Recipe.objects.create(**validated_data)
+        for ing in ingredients_data:
+            RecipeIngredient.objects.create(recipe=recipe, **ing)
+        for step in steps_data:
+            RecipeStep.objects.create(recipe=recipe, **step)
+        return recipe
+
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop("ingredients", None)
+        steps_data = validated_data.pop("steps", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if ingredients_data is not None:
+            instance.ingredients.all().delete()
+            for ing in ingredients_data:
+                RecipeIngredient.objects.create(recipe=instance, **ing)
+        if steps_data is not None:
+            instance.steps.all().delete()
+            for step in steps_data:
+                RecipeStep.objects.create(recipe=instance, **step)
+        return instance

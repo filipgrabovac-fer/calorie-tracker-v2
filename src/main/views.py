@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
-from .models import CalorieEntry, Category, MealPlan, PersonGoal, PredefinedMeal
+from .models import CalorieEntry, Category, MealPlan, PersonGoal, PredefinedMeal, Recipe
 from .serializers import (
     BulkCreateMealPlanSerializer,
     BulkDeleteMealPlanSerializer,
@@ -22,6 +22,7 @@ from .serializers import (
     MonthlyDashboardSerializer,
     PersonGoalSerializer,
     PredefinedMealSerializer,
+    RecipeSerializer,
 )
 
 try:
@@ -257,6 +258,13 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         MealPlan.objects.filter(pk__in=ids).update(is_processed=True)
         plans = MealPlan.objects.filter(pk__in=ids).select_related("predefined_meal")
         return Response(MealPlanSerializer(plans, many=True).data)
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    serializer_class = RecipeSerializer
+
+    def get_queryset(self):
+        return Recipe.objects.prefetch_related("ingredients", "steps")
 
 
 class PersonGoalViewSet(viewsets.ModelViewSet):

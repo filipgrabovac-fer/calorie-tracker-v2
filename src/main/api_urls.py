@@ -8,6 +8,7 @@ from .views import (
     MonthlyDashboardViewSet,
     PersonGoalViewSet,
     PredefinedMealViewSet,
+    RecipeViewSet,
 )
 
 router = DefaultRouter()
@@ -18,6 +19,7 @@ router.register(r"goals", PersonGoalViewSet, basename="goals")
 router.register(r"categories", CategoryViewSet, basename="categories")
 router.register(r"predefined-meals", PredefinedMealViewSet, basename="predefined-meals")
 router.register(r"meal-plans", MealPlanViewSet, basename="meal-plans")
+router.register(r"recipes", RecipeViewSet, basename="recipes")
 
 urlpatterns = [
     path("", include(router.urls)),

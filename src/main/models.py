@@ -126,3 +126,42 @@ class Ingredient(models.Model):
         if self.weight_grams:
             return f"{self.name} ({self.weight_grams}g)"
         return self.name
+
+
+class Recipe(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "recipe"
+        ordering = ["title"]
+
+    def __str__(self):
+        return self.title
+
+
+class RecipeIngredient(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="ingredients")
+    name = models.CharField(max_length=200)
+    amount = models.CharField(max_length=100, blank=True, default="")
+
+    class Meta:
+        db_table = "recipe_ingredient"
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.name} ({self.amount})" if self.amount else self.name
+
+
+class RecipeStep(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE, related_name="steps")
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True, default="")
+
+    class Meta:
+        db_table = "recipe_step"
+        ordering = ["id"]
+
+    def __str__(self):
+        return self.title

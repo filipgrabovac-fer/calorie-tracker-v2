@@ -17,6 +17,7 @@ const navLinks = (slug: string) => [
   { href: `/${slug}/entries`, label: "Entries" },
   { href: `/${slug}/meals`, label: "Meals" },
   { href: `/${slug}/meal-plan`, label: "Meal Plan" },
+  { href: `/${slug}/recipes`, label: "Recipes" },
   { href: `/${slug}/settings`, label: "Settings" },
 ];
 
