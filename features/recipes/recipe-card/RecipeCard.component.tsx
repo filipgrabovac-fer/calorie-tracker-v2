@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Pencil, Trash2, ChefHat, ListOrdered } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
     Dialog,
     DialogContent,
@@ -34,18 +35,20 @@ export type RecipeCardProps = {
 };
 
 export const RecipeCard = ({ id, title, description, ingredients, steps }: RecipeCardProps) => {
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const { mutate: deleteRecipe, isPending: isDeleting } = recipesApi.useDeleteRecipe();
 
     return (
         <>
             <Card
-                className={`flex flex-col transition-opacity ${isDeleting ? "opacity-50 pointer-events-none" : ""}`}
+                className={`flex flex-col transition-opacity cursor-pointer hover:border-foreground/20 ${isDeleting ? "opacity-50 pointer-events-none" : ""}`}
+                onClick={() => setIsDetailOpen(true)}
             >
                 <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2">
                         <CardTitle className="text-base leading-snug">{title}</CardTitle>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -101,6 +104,80 @@ export const RecipeCard = ({ id, title, description, ingredients, steps }: Recip
                 </CardContent>
             </Card>
 
+            {/* Detail view */}
+            <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>{title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-5">
+                        {description && (
+                            <p className="text-sm text-muted-foreground">{description}</p>
+                        )}
+
+                        {ingredients.length > 0 && (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2">
+                                    <ChefHat className="h-4 w-4 text-muted-foreground" />
+                                    <h3 className="text-sm font-semibold">Ingredients</h3>
+                                </div>
+                                <ul className="flex flex-col gap-1.5">
+                                    {ingredients.map((ing) => (
+                                        <li key={ing.id} className="flex items-center justify-between text-sm">
+                                            <span>{ing.name}</span>
+                                            {ing.amount && (
+                                                <span className="text-muted-foreground text-xs">{ing.amount}</span>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {ingredients.length > 0 && steps.length > 0 && <Separator />}
+
+                        {steps.length > 0 && (
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-2">
+                                    <ListOrdered className="h-4 w-4 text-muted-foreground" />
+                                    <h3 className="text-sm font-semibold">Steps</h3>
+                                </div>
+                                <ol className="flex flex-col gap-4">
+                                    {steps.map((step, index) => (
+                                        <li key={step.id} className="flex gap-3">
+                                            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-muted text-muted-foreground text-xs flex items-center justify-center font-medium mt-0.5">
+                                                {index + 1}
+                                            </span>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm font-medium">{step.title}</span>
+                                                {step.description && (
+                                                    <span className="text-sm text-muted-foreground">{step.description}</span>
+                                                )}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ol>
+                            </div>
+                        )}
+
+                        <Separator />
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="self-start"
+                            onClick={() => {
+                                setIsDetailOpen(false);
+                                setIsEditOpen(true);
+                            }}
+                        >
+                            <Pencil className="h-3.5 w-3.5 mr-2" />
+                            Edit Recipe
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit form */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
                 <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
