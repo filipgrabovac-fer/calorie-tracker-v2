@@ -239,7 +239,7 @@ export const AddEntryForm = ({
       />
 
       <fieldset disabled={isEstimatePending} className="flex min-w-0 flex-col gap-5">
-        <div className="grid min-w-0 grid-cols-2 gap-3">
+        <div className="grid min-w-0 grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex min-w-0 flex-col gap-1.5">
             <Label htmlFor="date" className="text-sm font-medium">Date</Label>
             <Input
