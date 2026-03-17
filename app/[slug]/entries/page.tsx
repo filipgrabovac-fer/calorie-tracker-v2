@@ -61,16 +61,22 @@ export default function EntriesPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent
+          className="sm:max-w-lg max-sm:fixed max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-dvh max-sm:rounded-none max-sm:border-0 flex flex-col p-0 gap-0 overflow-hidden"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle>Add Entry</DialogTitle>
             <DialogDescription>Record a new meal or snack</DialogDescription>
           </DialogHeader>
-          <AddEntryForm
-            person_type={slug as "filip" | "klara"}
-            defaultDate={new Date()}
-            onSuccess={handleSuccess}
-          />
+          <div className="overflow-y-auto flex-1 px-6 pb-6 pt-4">
+            <AddEntryForm
+              person_type={slug as "filip" | "klara"}
+              defaultDate={new Date()}
+              onSuccess={handleSuccess}
+              onCancel={() => setIsDialogOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
