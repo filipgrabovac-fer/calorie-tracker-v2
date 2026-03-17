@@ -35,6 +35,9 @@ services:
       - DJANGO_SETTINGS_MODULE=settings.local
       - PYTHONPATH=/app/src
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/db
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
     command: uv run python manage.py runserver 0.0.0.0:8000
     depends_on:
       db:

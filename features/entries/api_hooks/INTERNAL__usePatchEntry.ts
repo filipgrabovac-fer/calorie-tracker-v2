@@ -10,6 +10,19 @@ export type PatchEntryPayload = {
   calories?: number;
   eaten_at?: string;
   ingredients?: Array<{ name: string; weight_grams?: number | null }>;
+  image?: File | null;
+};
+
+const buildFormData = (payload: PatchEntryPayload): FormData => {
+  const formData = new FormData();
+  if (payload.title !== undefined) formData.append("title", payload.title);
+  if (payload.description !== undefined) formData.append("description", payload.description);
+  if (payload.calories !== undefined) formData.append("calories", String(payload.calories));
+  if (payload.eaten_at !== undefined) formData.append("eaten_at", payload.eaten_at);
+  if (payload.image) formData.append("image", payload.image);
+  if (payload.ingredients !== undefined)
+    formData.append("ingredients", JSON.stringify(payload.ingredients));
+  return formData;
 };
 
 export const INTERNAL__usePatchEntry = (onSuccess?: () => void) => {
@@ -24,7 +37,7 @@ export const INTERNAL__usePatchEntry = (onSuccess?: () => void) => {
     }) => {
       const response = await untypedApiClient.PATCH("/api/entries/{id}/", {
         params: { path: { id } },
-        body: payload,
+        body: buildFormData(payload),
       });
       if (response.error)
         throw new Error("Failed to update entry", { cause: response.error });

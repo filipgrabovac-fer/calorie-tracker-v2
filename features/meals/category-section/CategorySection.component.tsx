@@ -25,6 +25,7 @@ type Meal = {
   name: string;
   calories: number;
   ingredients: Ingredient[];
+  image_url?: string | null;
 };
 
 type CategorySectionProps = {
@@ -111,6 +112,7 @@ export const CategorySection = ({ id, name, meals }: CategorySectionProps) => {
                   calories={meal.calories}
                   categoryId={id}
                   ingredients={meal.ingredients}
+                  image_url={meal.image_url}
                 />
               ))
             )}

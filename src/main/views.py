@@ -2,6 +2,7 @@ import calendar
 from datetime import date, timedelta
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
+import cloudinary.uploader
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -47,10 +48,27 @@ class CalorieEntryViewSet(viewsets.ModelViewSet):
             qs = qs.filter(eaten_at__month=month)
         return qs
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context["request"] = self.request
-        return context
+    def _upload_image(self):
+        image_file = self.request.FILES.get("image")
+        if image_file:
+            result = cloudinary.uploader.upload(
+                image_file,
+                folder="calorie-tracker/entries",
+                resource_type="image",
+            )
+            return result.get("secure_url")
+        return None
+
+    def perform_create(self, serializer):
+        image_url = self._upload_image()
+        serializer.save(image_url=image_url)
+
+    def perform_update(self, serializer):
+        image_url = self._upload_image()
+        if image_url:
+            serializer.save(image_url=image_url)
+        else:
+            serializer.save()
 
 
 class MonthlyDashboardViewSet(viewsets.ViewSet):
@@ -202,6 +220,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 class PredefinedMealViewSet(viewsets.ModelViewSet):
     serializer_class = PredefinedMealSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         qs = PredefinedMeal.objects.prefetch_related("ingredients")
@@ -209,6 +228,28 @@ class PredefinedMealViewSet(viewsets.ModelViewSet):
         if category:
             qs = qs.filter(category_id=category)
         return qs
+
+    def _upload_image(self):
+        image_file = self.request.FILES.get("image")
+        if image_file:
+            result = cloudinary.uploader.upload(
+                image_file,
+                folder="calorie-tracker/meals",
+                resource_type="image",
+            )
+            return result.get("secure_url")
+        return None
+
+    def perform_create(self, serializer):
+        image_url = self._upload_image()
+        serializer.save(image_url=image_url)
+
+    def perform_update(self, serializer):
+        image_url = self._upload_image()
+        if image_url:
+            serializer.save(image_url=image_url)
+        else:
+            serializer.save()
 
 
 class MealPlanViewSet(viewsets.ModelViewSet):

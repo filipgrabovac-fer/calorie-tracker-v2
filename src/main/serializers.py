@@ -49,8 +49,8 @@ class PredefinedMealSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PredefinedMeal
-        fields = ["id", "name", "calories", "category", "created_at", "ingredients"]
-        read_only_fields = ["id", "created_at"]
+        fields = ["id", "name", "calories", "category", "created_at", "ingredients", "image_url"]
+        read_only_fields = ["id", "created_at", "image_url"]
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop("ingredients", [])
@@ -82,7 +82,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class CalorieEntrySerializer(serializers.ModelSerializer):
     ingredients = IngredientSerializer(many=True, required=False)
-    image_url = serializers.SerializerMethodField()
+    image_url = serializers.CharField(read_only=True, allow_null=True)
     predefined_meal = serializers.PrimaryKeyRelatedField(
         queryset=PredefinedMeal.objects.all(),
         required=False,
@@ -103,7 +103,6 @@ class CalorieEntrySerializer(serializers.ModelSerializer):
             "title",
             "description",
             "calories",
-            "image",
             "image_url",
             "ingredients",
             "eaten_at",
@@ -113,7 +112,6 @@ class CalorieEntrySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "image_url", "predefined_meal_id"]
         extra_kwargs = {
-            "image": {"write_only": True, "required": False},
             "title": {"required": False, "default": ""},
             "calories": {"required": False, "default": 0},
         }
@@ -125,12 +123,6 @@ class CalorieEntrySerializer(serializers.ModelSerializer):
             if not attrs.get("calories"):
                 raise serializers.ValidationError({"calories": "Required for manual entries."})
         return attrs
-
-    def get_image_url(self, obj):
-        request = self.context.get("request")
-        if obj.image and request:
-            return request.build_absolute_uri(obj.image.url)
-        return None
 
     def _parse_ingredients(self, data):
         """Parse ingredients from either a JSON string (multipart) or a list (JSON)."""
