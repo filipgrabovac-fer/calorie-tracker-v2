@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
+import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,6 +38,7 @@ type AddEntryFormProps = {
   entryId?: number;
   initialValues?: EntryInitialValues;
   onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
 export const AddEntryForm = ({
@@ -45,6 +47,7 @@ export const AddEntryForm = ({
   entryId,
   initialValues,
   onSuccess,
+  onCancel,
 }: AddEntryFormProps) => {
   const initialDate = defaultDate ?? new Date();
   const isEditMode = entryId != null && initialValues != null;
@@ -67,6 +70,7 @@ export const AddEntryForm = ({
     return toTimeInputValue(initialDate);
   });
   const [image, setImage] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const nextIngredientKeyRef = useRef(0);
   const [ingredients, setIngredients] = useState<(IngredientPayload & { _key: string })[]>(() => {
     if (initialValues?.ingredients?.length) {
@@ -187,145 +191,193 @@ export const AddEntryForm = ({
   };
 
   const isValid = title.trim() !== "" && Number(calories) > 0;
+  const imagePreviewUrl = image ? URL.createObjectURL(image) : null;
 
   return (
-    <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-6 overflow-hidden">
-      <fieldset disabled={isEstimatePending} className="flex min-w-0 flex-col gap-6 overflow-hidden">
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex min-w-0 flex-col gap-2">
-          <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
-          <Input
-            id="date"
-            type="date"
-            value={dateValue}
-            onChange={(e) => setDateValue(e.target.value)}
-            className="min-h-11 min-w-0 max-w-full sm:min-h-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
-            required
-          />
-        </div>
-        <div className="flex min-w-0 flex-col gap-2">
-          <Label htmlFor="time" className="text-sm font-medium">Time</Label>
-          <Input
-            id="time"
-            type="time"
-            value={timeValue}
-            onChange={(e) => setTimeValue(e.target.value)}
-            className="min-h-11 min-w-0 max-w-full sm:min-h-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
-        <Input
-          id="title"
-          placeholder="e.g. Chicken salad"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="description" className="text-sm font-medium">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Optional notes about this meal"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="resize-none"
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="calories" className="text-sm font-medium">Calories *</Label>
-        <div className="flex gap-2">
-          <Input
-            id="calories"
-            type="number"
-            min="0"
-            placeholder="e.g. 450"
-            value={calories}
-            onChange={(e) => setCalories(e.target.value)}
-            className="flex-1"
-            required
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={!hasValidIngredients}
-            onClick={() => {
-              const descParts = [description.trim(), estimationNotes.trim()].filter(Boolean);
-              estimateCalories({
-                title: title.trim() || undefined,
-                description: descParts.length ? descParts.join("\n\n") : undefined,
-                ingredients: validIngredientsForEstimate.map(({ name, weight_grams }) => ({
-                  name,
-                  weight_grams,
-                })),
-              });
-            }}
-          >
-            {isEstimatePending ? "Estimating…" : "Estimate with AI"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Ingredients</Label>
-          <Button type="button" variant="ghost" size="sm" onClick={addIngredient}>
-            + Add
-          </Button>
-        </div>
-        <div className="flex flex-col gap-2">
-          {ingredients.map((ing, index) => (
-            <div key={ing._key} className="flex gap-2">
-              <Input
-                placeholder="Ingredient name"
-                value={ing.name}
-                onChange={(e) => updateIngredient(index, "name", e.target.value)}
-                className="flex-1"
-              />
-              <Input
-                type="number"
-                min="0"
-                placeholder="Weight (g)"
-                value={ing.weight_grams ?? ""}
-                onChange={(e) =>
-                  updateIngredient(index, "weight_grams", e.target.value)
-                }
-                className="w-28 sm:w-32"
-              />
-              {ingredients.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => removeIngredient(index)}
-                >
-                  ×
-                </Button>
-              )}
+    <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
+      {/* Image upload — camera-style tap zone */}
+      <button
+        type="button"
+        onClick={() => fileInputRef.current?.click()}
+        className="relative w-full h-36 rounded-xl border-2 border-dashed border-border hover:border-primary/60 hover:bg-muted/30 transition-colors overflow-hidden flex items-center justify-center group"
+        aria-label="Add photo"
+      >
+        {imagePreviewUrl ? (
+          <>
+            <img
+              src={imagePreviewUrl}
+              alt="Preview"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="h-6 w-6 text-white" />
             </div>
-          ))}
+          </>
+        ) : (
+          <div className="flex flex-col items-center gap-1.5 text-muted-foreground group-hover:text-primary transition-colors">
+            <Camera className="h-6 w-6" />
+            <span className="text-sm font-medium">Add photo</span>
+          </div>
+        )}
+      </button>
+      {image && (
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors -mt-3 self-end"
+          onClick={() => setImage(null)}
+        >
+          <X className="h-3 w-3" />
+          Remove photo
+        </button>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => setImage(e.target.files?.[0] ?? null)}
+      />
+
+      <fieldset disabled={isEstimatePending} className="flex min-w-0 flex-col gap-5">
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label htmlFor="date" className="text-sm font-medium">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={dateValue}
+              onChange={(e) => setDateValue(e.target.value)}
+              className="min-w-0 max-w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
+              required
+            />
+          </div>
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <Label htmlFor="time" className="text-sm font-medium">Time</Label>
+            <Input
+              id="time"
+              type="time"
+              value={timeValue}
+              onChange={(e) => setTimeValue(e.target.value)}
+              className="min-w-0 max-w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-60 [&::-webkit-calendar-picker-indicator]:dark:invert"
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="image" className="text-sm font-medium">Image</Label>
-        <Input
-          id="image"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-        />
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="title" className="text-sm font-medium">Title *</Label>
+          <Input
+            id="title"
+            placeholder="e.g. Chicken salad"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
 
-      <Button type="submit" disabled={!isValid || isPending} className="w-full mt-2">
-        {isPending ? "Saving…" : isEditMode ? "Update Entry" : "Save Entry"}
-      </Button>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+          <Textarea
+            id="description"
+            placeholder="Optional notes about this meal"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            className="resize-none"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="calories" className="text-sm font-medium">Calories *</Label>
+          <div className="flex gap-2">
+            <Input
+              id="calories"
+              type="number"
+              min="0"
+              placeholder="e.g. 450"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className="flex-1"
+              required
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={!hasValidIngredients}
+              onClick={() => {
+                const descParts = [description.trim(), estimationNotes.trim()].filter(Boolean);
+                estimateCalories({
+                  title: title.trim() || undefined,
+                  description: descParts.length ? descParts.join("\n\n") : undefined,
+                  ingredients: validIngredientsForEstimate.map(({ name, weight_grams }) => ({
+                    name,
+                    weight_grams,
+                  })),
+                });
+              }}
+            >
+              {isEstimatePending ? "Estimating…" : "Estimate with AI"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Ingredients</Label>
+            <Button type="button" variant="ghost" size="sm" onClick={addIngredient}>
+              + Add
+            </Button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {ingredients.map((ing, index) => (
+              <div key={ing._key} className="flex gap-2">
+                <Input
+                  placeholder="Ingredient name"
+                  value={ing.name}
+                  onChange={(e) => updateIngredient(index, "name", e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Weight (g)"
+                  value={ing.weight_grams ?? ""}
+                  onChange={(e) =>
+                    updateIngredient(index, "weight_grams", e.target.value)
+                  }
+                  className="w-24 sm:w-28"
+                />
+                {ingredients.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => removeIngredient(index)}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 pt-1">
+          <Button type="submit" disabled={!isValid || isPending} className="w-full">
+            {isPending ? "Saving…" : isEditMode ? "Update Entry" : "Save Entry"}
+          </Button>
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={onCancel}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
       </fieldset>
     </form>
   );

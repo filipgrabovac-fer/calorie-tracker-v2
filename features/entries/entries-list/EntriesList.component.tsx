@@ -130,21 +130,25 @@ export const EntriesList = ({ person_type }: EntriesListProps) => {
         ))}
       </div>
       <Dialog open={!!entryToEdit} onOpenChange={(open) => !open && setEntryToEdit(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent
+          className="sm:max-w-lg max-sm:fixed max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-dvh max-sm:rounded-none max-sm:border-0 flex flex-col p-0 gap-0 overflow-hidden"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle>Edit Entry</DialogTitle>
-            <DialogDescription>
-              Update the meal or snack details
-            </DialogDescription>
+            <DialogDescription>Update the meal or snack details</DialogDescription>
           </DialogHeader>
-          {entryToEdit && initialValuesForEdit && (
-            <AddEntryForm
-              person_type={person_type as "filip" | "klara"}
-              entryId={entryToEdit.id}
-              initialValues={initialValuesForEdit}
-              onSuccess={() => setEntryToEdit(null)}
-            />
-          )}
+          <div className="overflow-y-auto flex-1 px-6 pb-6 pt-4">
+            {entryToEdit && initialValuesForEdit && (
+              <AddEntryForm
+                person_type={person_type as "filip" | "klara"}
+                entryId={entryToEdit.id}
+                initialValues={initialValuesForEdit}
+                onSuccess={() => setEntryToEdit(null)}
+                onCancel={() => setEntryToEdit(null)}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>

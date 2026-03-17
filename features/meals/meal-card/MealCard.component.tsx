@@ -88,20 +88,26 @@ export const MealCard = ({ id, name, calories, categoryId, ingredients, image_ur
       </div>
 
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
+        <DialogContent
+          className="sm:max-w-lg max-sm:fixed max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-dvh max-sm:rounded-none max-sm:border-0 flex flex-col p-0 gap-0 overflow-hidden"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
             <DialogTitle>Edit Meal</DialogTitle>
           </DialogHeader>
-          <MealForm
-            categoryId={categoryId}
-            mealId={id}
-            initialValues={{
-              name,
-              calories,
-              ingredients,
-            }}
-            onSuccess={() => setIsEditOpen(false)}
-          />
+          <div className="overflow-y-auto flex-1 px-6 pb-6 pt-4">
+            <MealForm
+              categoryId={categoryId}
+              mealId={id}
+              initialValues={{
+                name,
+                calories,
+                ingredients,
+              }}
+              onSuccess={() => setIsEditOpen(false)}
+              onCancel={() => setIsEditOpen(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </>

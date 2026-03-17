@@ -23,9 +23,10 @@ type MealFormProps = {
     ingredients: Array<{ name: string; weight_grams?: string | number | null }>;
   };
   onSuccess?: () => void;
+  onCancel?: () => void;
 };
 
-export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealFormProps) => {
+export const MealForm = ({ categoryId, mealId, initialValues, onSuccess, onCancel }: MealFormProps) => {
   const isEditMode = mealId != null;
   const nextKeyRef = useRef(0);
 
@@ -112,107 +113,121 @@ export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealF
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <fieldset disabled={isEstimatePending} className="contents">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="meal-name" className="text-sm font-medium">
-          Meal name *
-        </Label>
-        <Input
-          id="meal-name"
-          placeholder="e.g. Oatmeal with berries"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          autoFocus
-        />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="meal-calories" className="text-sm font-medium">
-          Calories *
-        </Label>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="meal-name" className="text-sm font-medium">
+            Meal name *
+          </Label>
           <Input
-            id="meal-calories"
-            type="number"
-            min="0"
-            placeholder="e.g. 350"
-            value={calories}
-            onChange={(e) => setCalories(e.target.value)}
-            className="flex-1"
+            id="meal-name"
+            placeholder="e.g. Oatmeal with berries"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             required
+            autoFocus
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="meal-calories" className="text-sm font-medium">
+            Calories *
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              id="meal-calories"
+              type="number"
+              min="0"
+              placeholder="e.g. 350"
+              value={calories}
+              onChange={(e) => setCalories(e.target.value)}
+              className="flex-1"
+              required
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={validIngredientsForEstimate.length === 0}
+              onClick={() =>
+                estimateCalories({
+                  title: name.trim() || undefined,
+                  ingredients: validIngredientsForEstimate.map(({ name: ingName, weight_grams }) => ({
+                    name: ingName,
+                    weight_grams,
+                  })),
+                })
+              }
+            >
+              {isEstimatePending ? "Estimating…" : "Estimate with AI"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">Ingredients</Label>
+            <Button type="button" variant="ghost" size="sm" onClick={addIngredient}>
+              + Add
+            </Button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {ingredients.map((ing, index) => (
+              <div key={ing._key} className="flex gap-2">
+                <Input
+                  placeholder="Ingredient name"
+                  value={ing.name}
+                  onChange={(e) => updateIngredient(index, "name", e.target.value)}
+                  className="flex-1"
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Weight (g)"
+                  value={ing.weight_grams ?? ""}
+                  onChange={(e) => updateIngredient(index, "weight_grams", e.target.value)}
+                  className="w-24 sm:w-28"
+                />
+                {ingredients.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => removeIngredient(index)}
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="meal-image" className="text-sm font-medium">Image</Label>
+          <Input
+            id="meal-image"
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files?.[0] ?? null)}
+          />
+        </div>
+      </fieldset>
+
+      <div className="flex flex-col gap-2 pt-1">
+        <Button type="submit" disabled={!isValid || isPending || isEstimatePending} className="w-full">
+          {isPending ? "Saving…" : isEditMode ? "Update Meal" : "Add Meal"}
+        </Button>
+        {onCancel && (
           <Button
             type="button"
-            variant="secondary"
-            disabled={validIngredientsForEstimate.length === 0}
-            onClick={() =>
-              estimateCalories({
-                title: name.trim() || undefined,
-                ingredients: validIngredientsForEstimate.map(({ name: ingName, weight_grams }) => ({
-                  name: ingName,
-                  weight_grams,
-                })),
-              })
-            }
+            variant="ghost"
+            className="w-full"
+            onClick={onCancel}
+            disabled={isPending}
           >
-            {isEstimatePending ? "Estimating…" : "Estimate with AI"}
+            Cancel
           </Button>
-        </div>
+        )}
       </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Ingredients</Label>
-          <Button type="button" variant="ghost" size="sm" onClick={addIngredient}>
-            + Add
-          </Button>
-        </div>
-        <div className="flex flex-col gap-2">
-          {ingredients.map((ing, index) => (
-            <div key={ing._key} className="flex gap-2">
-              <Input
-                placeholder="Ingredient name"
-                value={ing.name}
-                onChange={(e) => updateIngredient(index, "name", e.target.value)}
-                className="flex-1"
-              />
-              <Input
-                type="number"
-                min="0"
-                placeholder="Weight (g)"
-                value={ing.weight_grams ?? ""}
-                onChange={(e) => updateIngredient(index, "weight_grams", e.target.value)}
-                className="w-28 sm:w-32"
-              />
-              {ingredients.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => removeIngredient(index)}
-                >
-                  ×
-                </Button>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="meal-image" className="text-sm font-medium">Image</Label>
-        <Input
-          id="meal-image"
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files?.[0] ?? null)}
-        />
-      </div>
-      </fieldset>
-      <Button type="submit" disabled={!isValid || isPending || isEstimatePending}>
-        {isPending ? "Saving…" : isEditMode ? "Update Meal" : "Add Meal"}
-      </Button>
     </form>
   );
 };
