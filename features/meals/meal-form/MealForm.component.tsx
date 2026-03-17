@@ -30,6 +30,7 @@ export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealF
   const nextKeyRef = useRef(0);
 
   const [name, setName] = useState(initialValues?.name ?? "");
+  const [image, setImage] = useState<File | null>(null);
   const [calories, setCalories] = useState(
     initialValues?.calories != null ? String(initialValues.calories) : ""
   );
@@ -91,6 +92,7 @@ export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealF
           calories: Number(calories),
           category: categoryId,
           ingredients: validIngredients,
+          image,
         },
       });
     } else {
@@ -99,6 +101,7 @@ export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealF
         calories: Number(calories),
         category: categoryId,
         ingredients: validIngredients,
+        image,
       };
       createMeal(payload);
     }
@@ -197,6 +200,15 @@ export const MealForm = ({ categoryId, mealId, initialValues, onSuccess }: MealF
         </div>
       </div>
 
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="meal-image" className="text-sm font-medium">Image</Label>
+        <Input
+          id="meal-image"
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImage(e.target.files?.[0] ?? null)}
+        />
+      </div>
       </fieldset>
       <Button type="submit" disabled={!isValid || isPending || isEstimatePending}>
         {isPending ? "Saving…" : isEditMode ? "Update Meal" : "Add Meal"}

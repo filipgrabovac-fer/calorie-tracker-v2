@@ -170,6 +170,7 @@ export const AddEntryForm = ({
           calories: Number(calories),
           eaten_at: toISODateTime(dateValue, timeValue),
           ingredients: validIngredients,
+          image,
         },
       });
     } else {

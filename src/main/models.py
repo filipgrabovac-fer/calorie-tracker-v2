@@ -41,6 +41,7 @@ class PredefinedMeal(models.Model):
     name = models.CharField(max_length=200)
     calories = models.PositiveIntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="meals")
+    image_url = models.CharField(max_length=500, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -88,7 +89,7 @@ class CalorieEntry(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True, default="")
     calories = models.PositiveIntegerField()
-    image = models.ImageField(upload_to="entries/%Y/%m/", blank=True, null=True)
+    image_url = models.CharField(max_length=500, blank=True, null=True)
     eaten_at = models.DateTimeField(default=timezone.now)
     created_at = models.DateTimeField(auto_now_add=True)
     predefined_meal = models.ForeignKey(

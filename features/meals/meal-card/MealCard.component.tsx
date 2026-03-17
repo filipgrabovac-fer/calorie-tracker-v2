@@ -25,19 +25,27 @@ export type MealCardProps = {
   calories: number;
   categoryId: number;
   ingredients: Ingredient[];
+  image_url?: string | null;
 };
 
-export const MealCard = ({ id, name, calories, categoryId, ingredients }: MealCardProps) => {
+export const MealCard = ({ id, name, calories, categoryId, ingredients, image_url }: MealCardProps) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const { mutate: deleteMeal, isPending: isDeleting } = mealsApi.useDeleteMeal();
 
   return (
     <>
       <div
-        className={`flex items-center justify-between gap-3 py-2.5 px-3 rounded-md border bg-card transition-opacity ${
+        className={`flex items-center gap-3 py-2.5 px-3 rounded-md border bg-card transition-opacity ${
           isDeleting ? "opacity-50 pointer-events-none" : ""
         }`}
       >
+        {image_url && (
+          <img
+            src={image_url}
+            alt={name}
+            className="w-10 h-10 rounded-md object-cover flex-shrink-0 border border-border"
+          />
+        )}
         <div className="flex flex-col gap-1 min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-medium truncate">{name}</span>
@@ -58,7 +66,7 @@ export const MealCard = ({ id, name, calories, categoryId, ingredients }: MealCa
           )}
         </div>
 
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 ml-auto shrink-0">
           <Button
             variant="ghost"
             size="sm"

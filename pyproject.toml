@@ -21,4 +21,5 @@ dependencies = [
     "dotenv>=0.9.9",
     "dj-database-url>=3.0.1",
     "drf-spectacular>=0.28.0",
+    "cloudinary>=1.44.1",
 ]
