@@ -15,17 +15,18 @@ class EstimateCaloriesIngredientSerializer(serializers.Serializer):
 class EstimateCaloriesRequestSerializer(serializers.Serializer):
     title = serializers.CharField(allow_blank=True, required=False, default="")
     description = serializers.CharField(allow_blank=True, required=False, default="")
-    ingredients = EstimateCaloriesIngredientSerializer(many=True)
+    ingredients = EstimateCaloriesIngredientSerializer(many=True, required=False, default=list)
+    image_base64 = serializers.CharField(required=False, allow_blank=True, default="")
 
-    def validate_ingredients(self, value):
-        if not value:
-            raise serializers.ValidationError("At least one ingredient is required.")
-        names = [ing.get("name", "").strip() for ing in value if ing.get("name")]
-        if not any(names):
+    def validate(self, attrs):
+        ingredients = attrs.get("ingredients") or []
+        image_base64 = attrs.get("image_base64", "").strip()
+        has_ingredients = any(ing.get("name", "").strip() for ing in ingredients)
+        if not has_ingredients and not image_base64:
             raise serializers.ValidationError(
-                "At least one ingredient must have a non-empty name."
+                "Provide at least one ingredient or an image to estimate calories."
             )
-        return value
+        return attrs
 
 
 class EstimateCaloriesResponseSerializer(serializers.Serializer):
