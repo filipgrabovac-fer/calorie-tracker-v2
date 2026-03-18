@@ -196,10 +196,11 @@ class EstimateCaloriesViewSet(viewsets.ViewSet):
             description = None
         ingredients = [
             {"name": ing["name"], "weight_grams": ing.get("weight_grams")}
-            for ing in data["ingredients"]
+            for ing in (data.get("ingredients") or [])
         ]
+        image_base64 = data.get("image_base64", "").strip() or None
         try:
-            estimated = estimate_calories(title=title, description=description, ingredients=ingredients)
+            estimated = estimate_calories(title=title, description=description, ingredients=ingredients, image_base64=image_base64)
         except ValueError as e:
             detail = str(e)
             status = 503 if "GOOGLE_API_KEY" in detail else 400

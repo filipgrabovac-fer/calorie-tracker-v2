@@ -125,6 +125,7 @@ export const AddEntryForm = ({
   const isPending = isCreatePending || isPatchPending;
   const validIngredientsForEstimate = ingredients.filter((ing) => ing.name.trim() !== "");
   const hasValidIngredients = validIngredientsForEstimate.length > 0;
+  const canEstimate = hasValidIngredients || !!image;
 
   const addIngredient = () => {
     nextIngredientKeyRef.current += 1;
@@ -302,7 +303,7 @@ export const AddEntryForm = ({
             <Button
               type="button"
               variant="secondary"
-              disabled={!hasValidIngredients}
+              disabled={!canEstimate}
               onClick={() => {
                 const descParts = [description.trim(), estimationNotes.trim()].filter(Boolean);
                 estimateCalories({
@@ -312,6 +313,7 @@ export const AddEntryForm = ({
                     name,
                     weight_grams,
                   })),
+                  image,
                 });
               }}
             >
