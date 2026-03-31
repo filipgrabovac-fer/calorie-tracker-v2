@@ -32,16 +32,26 @@ export const _useAudioRecorder = ({
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm";
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const PREFERRED_TYPES = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/mp4",
+      ];
+      const mimeType = PREFERRED_TYPES.find((t) =>
+        MediaRecorder.isTypeSupported(t)
+      );
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+      const actualMime = recorder.mimeType;
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunksRef.current.push(e.data);
-          const cumulativeBlob = new Blob(chunksRef.current, { type: mimeType });
+          const cumulativeBlob = new Blob(chunksRef.current, {
+            type: actualMime,
+          });
           onChunk?.(cumulativeBlob);
         }
       };
