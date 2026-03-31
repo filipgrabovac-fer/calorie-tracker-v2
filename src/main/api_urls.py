@@ -9,6 +9,7 @@ from .views import (
     PersonGoalViewSet,
     PredefinedMealViewSet,
     RecipeViewSet,
+    TranscribeAudioViewSet,
 )
 
 router = DefaultRouter()
@@ -20,6 +21,7 @@ router.register(r"categories", CategoryViewSet, basename="categories")
 router.register(r"predefined-meals", PredefinedMealViewSet, basename="predefined-meals")
 router.register(r"meal-plans", MealPlanViewSet, basename="meal-plans")
 router.register(r"recipes", RecipeViewSet, basename="recipes")
+router.register(r"transcribe-audio", TranscribeAudioViewSet, basename="transcribe-audio")
 
 urlpatterns = [
     path("", include(router.urls)),

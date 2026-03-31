@@ -1,8 +1,11 @@
+import io
 import calendar
 from datetime import date, timedelta
+from django.conf import settings
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 import cloudinary.uploader
+import openai
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -24,6 +27,8 @@ from .serializers import (
     PersonGoalSerializer,
     PredefinedMealSerializer,
     RecipeSerializer,
+    TranscribeAudioRequestSerializer,
+    TranscribeAudioResponseSerializer,
 )
 
 try:
@@ -212,6 +217,39 @@ class EstimateCaloriesViewSet(viewsets.ViewSet):
             )
         return Response(
             EstimateCaloriesResponseSerializer({"estimated_calories": estimated}).data
+        )
+
+
+class TranscribeAudioViewSet(viewsets.ViewSet):
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(
+        request=TranscribeAudioRequestSerializer,
+        responses={200: TranscribeAudioResponseSerializer},
+    )
+    def create(self, request):
+        if not settings.OPENAI_API_KEY:
+            return Response(
+                {"detail": "Transcription is not available."},
+                status=503,
+            )
+        serializer = TranscribeAudioRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        audio_file = serializer.validated_data["audio"]
+        client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+        try:
+            audio_bytes = audio_file.read()
+            transcript = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=("audio.webm", io.BytesIO(audio_bytes), "audio/webm"),
+            )
+        except openai.OpenAIError:
+            return Response(
+                {"detail": "Transcription failed."},
+                status=503,
+            )
+        return Response(
+            TranscribeAudioResponseSerializer({"transcription": transcript.text}).data
         )
 
 
