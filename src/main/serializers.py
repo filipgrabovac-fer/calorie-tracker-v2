@@ -273,3 +273,11 @@ class RecipeSerializer(serializers.ModelSerializer):
             for step in steps_data:
                 RecipeStep.objects.create(recipe=instance, **step)
         return instance
+
+
+class TranscribeAudioRequestSerializer(serializers.Serializer):
+    audio = serializers.FileField()
+
+
+class TranscribeAudioResponseSerializer(serializers.Serializer):
+    transcription = serializers.CharField()
