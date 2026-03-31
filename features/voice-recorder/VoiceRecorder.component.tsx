@@ -31,7 +31,7 @@ export const VoiceRecorder = ({ open, onOpenChange }: VoiceRecorderProps) => {
 
   const { mutate: transcribeAudio, isPending } =
     voiceRecorderApi.useTranscribeAudio((data) =>
-      setTranscription(data.transcription)
+      setTranscription(data.transcription),
     );
 
   const handleChunk = useCallback(
@@ -40,7 +40,7 @@ export const VoiceRecorder = ({ open, onOpenChange }: VoiceRecorderProps) => {
         transcribeAudio({ audio: blob });
       }
     },
-    [isPending, transcribeAudio]
+    [isPending, transcribeAudio],
   );
 
   const { state, start, stop, error } = _useAudioRecorder({
@@ -110,9 +110,11 @@ export const VoiceRecorder = ({ open, onOpenChange }: VoiceRecorderProps) => {
             </div>
           )}
 
-          {!isRecording && state !== "recording" && (
+          {!isRecording && (
             <p className="text-sm text-muted-foreground text-center">
-              {state === "stopped" ? "Recording stopped" : "Tap to start recording"}
+              {state === "stopped"
+                ? "Recording stopped"
+                : "Tap to start recording"}
             </p>
           )}
 
