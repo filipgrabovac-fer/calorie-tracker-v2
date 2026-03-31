@@ -29,6 +29,11 @@ export const _useAudioRecorder = ({
   const start = useCallback(async () => {
     setError(null);
     chunksRef.current = [];
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError("Your browser or current connection does not support audio recording. Try using HTTPS or a modern browser.");
+      setState("idle");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -64,10 +69,17 @@ export const _useAudioRecorder = ({
       recorder.start(chunkIntervalMs);
       setState("recording");
     } catch (err) {
-      if (err instanceof DOMException && err.name === "NotAllowedError") {
-        setError(
-          "Microphone access denied. Please allow microphone access and try again."
-        );
+      if (err instanceof DOMException) {
+        const messages: Record<string, string> = {
+          NotAllowedError: "Microphone access denied. Please allow microphone access and try again.",
+          NotFoundError: "No microphone found. Please connect a microphone and try again.",
+          NotReadableError: "Microphone is already in use by another application.",
+          OverconstrainedError: "Microphone does not meet the required constraints.",
+          SecurityError: "Microphone access blocked by a security policy.",
+        };
+        setError(messages[err.name] ?? `Could not start recording: ${err.message}`);
+      } else if (err instanceof Error) {
+        setError(`Could not start recording: ${err.message}`);
       } else {
         setError("Could not start recording.");
       }
