@@ -110,7 +110,7 @@ export const VoiceRecorder = ({ open, onOpenChange }: VoiceRecorderProps) => {
             </div>
           )}
 
-          {!isRecording && state !== "recording" && (
+          {!isRecording && (
             <p className="text-sm text-muted-foreground text-center">
               {state === "stopped" ? "Recording stopped" : "Tap to start recording"}
             </p>
